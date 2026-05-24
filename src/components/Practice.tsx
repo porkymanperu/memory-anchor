@@ -10,7 +10,7 @@ import { toast } from 'sonner';
 
 interface PracticeProps {
   selectedCategories: CategoryId[];
-  selectedDifficulty: 'easy' | 'medium' | 'hard' | 'all';
+  selectedDifficulty: 'easy' | 'medium' | 'hard';
   allItems: MemoryItem[];
   userProgress: UserProgress;
   setUserProgress: (updater: (prev: UserProgress) => UserProgress) => void;
@@ -40,11 +40,21 @@ export function Practice({
   useEffect(() => {
     let items = getItemsByCategories(allItems, selectedCategories);
     
-    if (selectedDifficulty !== 'all') {
-      items = items.filter(item => item.difficulty === selectedDifficulty);
-    }
+    items = items.filter(item => item.difficulty === selectedDifficulty);
     
-    const shuffled = shuffleArray(items).slice(0, 10);
+    const getQuestionCount = (difficulty: 'easy' | 'medium' | 'hard') => {
+      if (difficulty === 'easy') {
+        return Math.floor(Math.random() * 6) + 10;
+      } else if (difficulty === 'medium') {
+        return Math.floor(Math.random() * 6) + 15;
+      } else if (difficulty === 'hard') {
+        return Math.floor(Math.random() * 11) + 20;
+      }
+      return 10;
+    };
+    
+    const questionCount = getQuestionCount(selectedDifficulty);
+    const shuffled = shuffleArray(items).slice(0, questionCount);
     const withDisplayQuestions = shuffled.map(item => ({
       ...item,
       displayQuestion: getRandomQuestion(item)

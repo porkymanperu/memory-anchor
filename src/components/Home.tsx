@@ -10,14 +10,14 @@ import { motion } from 'framer-motion';
 import { format, isToday, parseISO } from 'date-fns';
 
 interface HomeProps {
-  onStartPractice: (categories: CategoryId[], difficulty?: 'easy' | 'medium' | 'hard' | 'all') => void;
+  onStartPractice: (categories: CategoryId[], difficulty?: 'easy' | 'medium' | 'hard') => void;
   userProgress: UserProgress;
 }
 
 export function Home({ onStartPractice, userProgress }: HomeProps) {
   const [showCategoryDialog, setShowCategoryDialog] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<CategoryId[]>([]);
-  const [selectedDifficulty, setSelectedDifficulty] = useState<'easy' | 'medium' | 'hard' | 'all'>('easy');
+  const [selectedDifficulty, setSelectedDifficulty] = useState<'easy' | 'medium' | 'hard'>('easy');
 
   const toggleCategory = (categoryId: CategoryId) => {
     setSelectedCategories(prev =>
