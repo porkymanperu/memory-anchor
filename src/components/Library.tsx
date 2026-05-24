@@ -36,7 +36,7 @@ export function Library({ allItems, userProgress, setAllItems }: LibraryProps) {
   const [newItemForm, setNewItemForm] = useState({
     categoryId: 'actors' as CategoryId,
     answer: '',
-    question: '',
+    questions: [''],
     hint1: '',
     hint2: '',
     technique: 'Visual Association',
@@ -82,8 +82,14 @@ export function Library({ allItems, userProgress, setAllItems }: LibraryProps) {
   };
 
   const handleAddItem = () => {
-    if (!newItemForm.answer.trim() || !newItemForm.question.trim()) {
-      toast.error('Please fill in at least the answer and question fields');
+    if (!newItemForm.answer.trim()) {
+      toast.error('Please fill in the answer field');
+      return;
+    }
+
+    const validQuestions = newItemForm.questions.filter(q => q.trim() !== '');
+    if (validQuestions.length === 0) {
+      toast.error('Please provide at least one question');
       return;
     }
 
@@ -97,11 +103,14 @@ export function Library({ allItems, userProgress, setAllItems }: LibraryProps) {
       return;
     }
 
+    const trimmedQuestions = validQuestions.map(q => q.trim());
+    
     const newItem: MemoryItem = {
       id: `custom-${Date.now()}`,
       categoryId: newItemForm.categoryId,
       answer: newItemForm.answer.trim(),
-      question: newItemForm.question.trim(),
+      question: trimmedQuestions[0],
+      questions: trimmedQuestions.length > 1 ? trimmedQuestions : undefined,
       hints: [newItemForm.hint1.trim(), newItemForm.hint2.trim()],
       association: {
         technique: newItemForm.technique,
@@ -122,7 +131,7 @@ export function Library({ allItems, userProgress, setAllItems }: LibraryProps) {
     setNewItemForm({
       categoryId: 'actors',
       answer: '',
-      question: '',
+      questions: [''],
       hint1: '',
       hint2: '',
       technique: 'Visual Association',
@@ -488,15 +497,57 @@ export function Library({ allItems, userProgress, setAllItems }: LibraryProps) {
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="question">Question *</Label>
-                    <Textarea
-                      id="question"
-                      placeholder="e.g., Who played Jack in Titanic?"
-                      value={newItemForm.question}
-                      onChange={(e) => setNewItemForm({ ...newItemForm, question: e.target.value })}
-                      rows={2}
-                    />
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <Label>Questions * (Add multiple for random variation)</Label>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setNewItemForm({ ...newItemForm, questions: [...newItemForm.questions, ''] })}
+                        className="gap-1 h-7 text-xs"
+                      >
+                        <Plus size={14} weight="bold" />
+                        Add Question
+                      </Button>
+                    </div>
+                    <div className="space-y-2">
+                      {newItemForm.questions.map((question, index) => (
+                        <div key={index} className="flex gap-2">
+                          <div className="flex-1">
+                            <Textarea
+                              id={`question-${index}`}
+                              placeholder={`Question ${index + 1}: e.g., Who played Jack in Titanic?`}
+                              value={question}
+                              onChange={(e) => {
+                                const newQuestions = [...newItemForm.questions];
+                                newQuestions[index] = e.target.value;
+                                setNewItemForm({ ...newItemForm, questions: newQuestions });
+                              }}
+                              rows={2}
+                              className={index > 0 ? 'border-accent/30' : ''}
+                            />
+                          </div>
+                          {newItemForm.questions.length > 1 && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                const newQuestions = newItemForm.questions.filter((_, i) => i !== index);
+                                setNewItemForm({ ...newItemForm, questions: newQuestions });
+                              }}
+                              className="flex-shrink-0 h-auto px-2 text-muted-foreground hover:text-destructive"
+                            >
+                              <X size={18} />
+                            </Button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Add multiple questions to practice different ways of recalling the same answer. During practice, one will be randomly selected.
+                    </p>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
