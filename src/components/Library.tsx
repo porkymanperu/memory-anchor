@@ -39,10 +39,6 @@ export function Library({ allItems, userProgress, setAllItems }: LibraryProps) {
     questions: [''],
     hint1: '',
     hint2: '',
-    technique: 'Visual Association',
-    explanation: '',
-    imagery: '',
-    mnemonic: '',
     answerImageUrl: '',
     difficulty: 'medium' as 'easy' | 'medium' | 'hard',
   });
@@ -98,11 +94,6 @@ export function Library({ allItems, userProgress, setAllItems }: LibraryProps) {
       return;
     }
 
-    if (!newItemForm.explanation.trim() || !newItemForm.imagery.trim()) {
-      toast.error('Please provide memory association details');
-      return;
-    }
-
     const trimmedQuestions = validQuestions.map(q => q.trim());
     
     const newItem: MemoryItem = {
@@ -112,12 +103,6 @@ export function Library({ allItems, userProgress, setAllItems }: LibraryProps) {
       question: trimmedQuestions[0],
       questions: trimmedQuestions.length > 1 ? trimmedQuestions : undefined,
       hints: [newItemForm.hint1.trim(), newItemForm.hint2.trim()],
-      association: {
-        technique: newItemForm.technique,
-        explanation: newItemForm.explanation.trim(),
-        imagery: newItemForm.imagery.trim(),
-        mnemonic: newItemForm.mnemonic.trim() || undefined,
-      },
       answerImageUrl: newItemForm.answerImageUrl.trim() || undefined,
       isCustom: true,
       difficulty: newItemForm.difficulty,
@@ -134,10 +119,6 @@ export function Library({ allItems, userProgress, setAllItems }: LibraryProps) {
       questions: [''],
       hint1: '',
       hint2: '',
-      technique: 'Visual Association',
-      explanation: '',
-      imagery: '',
-      mnemonic: '',
       answerImageUrl: '',
       difficulty: 'medium',
     });
@@ -367,41 +348,43 @@ export function Library({ allItems, userProgress, setAllItems }: LibraryProps) {
                     </div>
                   </div>
 
-                  <motion.div
-                    initial={{ y: 20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: 0.4 }}
-                    className="bg-secondary/20 rounded-xl p-5 space-y-4 border border-secondary/30"
-                  >
-                    <div>
-                      <h3 className="text-sm font-bold text-primary uppercase tracking-wide mb-2">
-                        {selectedItem.association.technique}
-                      </h3>
-                      <p className="text-sm text-muted-foreground leading-relaxed">
-                        {selectedItem.association.explanation}
-                      </p>
-                    </div>
-                    
-                    <div className="bg-card rounded-lg p-4 border-l-4 border-primary shadow-sm">
-                      <h4 className="text-xs font-semibold text-primary uppercase tracking-wide mb-2 flex items-center gap-1">
-                        Mental Imagery
-                      </h4>
-                      <p className="font-secondary text-sm leading-relaxed italic">
-                        {selectedItem.association.imagery}
-                      </p>
-                    </div>
-                    
-                    {selectedItem.association.mnemonic && (
-                      <div className="bg-gradient-to-br from-accent/10 to-accent/5 rounded-lg p-4 border border-accent/30">
-                        <h4 className="text-xs font-semibold text-accent uppercase tracking-wide mb-2">
-                          Mnemonic Device
-                        </h4>
-                        <p className="text-sm italic text-foreground font-medium">
-                          "{selectedItem.association.mnemonic}"
+                  {selectedItem.association && (
+                    <motion.div
+                      initial={{ y: 20, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{ delay: 0.4 }}
+                      className="bg-secondary/20 rounded-xl p-5 space-y-4 border border-secondary/30"
+                    >
+                      <div>
+                        <h3 className="text-sm font-bold text-primary uppercase tracking-wide mb-2">
+                          {selectedItem.association.technique}
+                        </h3>
+                        <p className="text-sm text-muted-foreground leading-relaxed">
+                          {selectedItem.association.explanation}
                         </p>
                       </div>
-                    )}
-                  </motion.div>
+                      
+                      <div className="bg-card rounded-lg p-4 border-l-4 border-primary shadow-sm">
+                        <h4 className="text-xs font-semibold text-primary uppercase tracking-wide mb-2 flex items-center gap-1">
+                          Mental Imagery
+                        </h4>
+                        <p className="font-secondary text-sm leading-relaxed italic">
+                          {selectedItem.association.imagery}
+                        </p>
+                      </div>
+                      
+                      {selectedItem.association.mnemonic && (
+                        <div className="bg-gradient-to-br from-accent/10 to-accent/5 rounded-lg p-4 border border-accent/30">
+                          <h4 className="text-xs font-semibold text-accent uppercase tracking-wide mb-2">
+                            Mnemonic Device
+                          </h4>
+                          <p className="text-sm italic text-foreground font-medium">
+                            "{selectedItem.association.mnemonic}"
+                          </p>
+                        </div>
+                      )}
+                    </motion.div>
+                  )}
 
                   {selectedItem.difficulty && (
                     <div className="flex items-center gap-2 pt-2">
@@ -590,136 +573,92 @@ export function Library({ allItems, userProgress, setAllItems }: LibraryProps) {
 
                   <div className="border-t pt-6">
                     <h3 className="font-semibold mb-4 flex items-center gap-2">
-                      <Sparkle size={18} weight="fill" className="text-accent" />
-                      Memory Association
+                      <ImageIcon size={18} weight="fill" className="text-accent" />
+                      Answer Image
                     </h3>
 
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="technique">Technique</Label>
+                    <div className="space-y-3">
+                      <Label>Answer Image (optional)</Label>
+                      <div className="flex gap-2 mb-3">
+                        <Button
+                          type="button"
+                          variant={uploadMode === 'url' ? 'default' : 'outline'}
+                          onClick={() => setUploadMode('url')}
+                          className="flex-1 gap-2"
+                          size="sm"
+                        >
+                          <ImageIcon size={16} />
+                          URL
+                        </Button>
+                        <Button
+                          type="button"
+                          variant={uploadMode === 'upload' ? 'default' : 'outline'}
+                          onClick={() => setUploadMode('upload')}
+                          className="flex-1 gap-2"
+                          size="sm"
+                        >
+                          <Upload size={16} />
+                          Upload
+                        </Button>
+                      </div>
+
+                      {uploadMode === 'url' ? (
                         <Input
-                          id="technique"
-                          placeholder="e.g., Visual Association, Sound Connection"
-                          value={newItemForm.technique}
-                          onChange={(e) => setNewItemForm({ ...newItemForm, technique: e.target.value })}
+                          id="answerImageUrl"
+                          placeholder="e.g., https://example.com/image.jpg"
+                          value={newItemForm.answerImageUrl}
+                          onChange={(e) => setNewItemForm({ ...newItemForm, answerImageUrl: e.target.value })}
                         />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="explanation">Explanation *</Label>
-                        <Textarea
-                          id="explanation"
-                          placeholder="Explain why this memory technique works..."
-                          value={newItemForm.explanation}
-                          onChange={(e) => setNewItemForm({ ...newItemForm, explanation: e.target.value })}
-                          rows={2}
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="imagery">Mental Imagery *</Label>
-                        <Textarea
-                          id="imagery"
-                          placeholder="Describe the vivid mental image to remember..."
-                          value={newItemForm.imagery}
-                          onChange={(e) => setNewItemForm({ ...newItemForm, imagery: e.target.value })}
-                          rows={3}
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="mnemonic">Mnemonic Device (optional)</Label>
-                        <Input
-                          id="mnemonic"
-                          placeholder="e.g., An acronym or phrase to help remember"
-                          value={newItemForm.mnemonic}
-                          onChange={(e) => setNewItemForm({ ...newItemForm, mnemonic: e.target.value })}
-                        />
-                      </div>
-
-                      <div className="space-y-3">
-                        <Label>Answer Image (optional)</Label>
-                        <div className="flex gap-2 mb-3">
+                      ) : (
+                        <div>
+                          <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept="image/*"
+                            onChange={handleImageUpload}
+                            className="hidden"
+                            id="image-upload"
+                          />
                           <Button
                             type="button"
-                            variant={uploadMode === 'url' ? 'default' : 'outline'}
-                            onClick={() => setUploadMode('url')}
-                            className="flex-1 gap-2"
-                            size="sm"
+                            variant="outline"
+                            onClick={() => fileInputRef.current?.click()}
+                            className="w-full gap-2"
                           >
-                            <ImageIcon size={16} />
-                            URL
-                          </Button>
-                          <Button
-                            type="button"
-                            variant={uploadMode === 'upload' ? 'default' : 'outline'}
-                            onClick={() => setUploadMode('upload')}
-                            className="flex-1 gap-2"
-                            size="sm"
-                          >
-                            <Upload size={16} />
-                            Upload
+                            <Upload size={18} />
+                            Choose Image
                           </Button>
                         </div>
+                      )}
 
-                        {uploadMode === 'url' ? (
-                          <Input
-                            id="answerImageUrl"
-                            placeholder="e.g., https://example.com/image.jpg"
-                            value={newItemForm.answerImageUrl}
-                            onChange={(e) => setNewItemForm({ ...newItemForm, answerImageUrl: e.target.value })}
+                      {(imagePreview || (uploadMode === 'url' && newItemForm.answerImageUrl)) && (
+                        <div className="relative rounded-lg overflow-hidden border-2 border-primary/20 bg-muted/30">
+                          <img
+                            src={imagePreview || newItemForm.answerImageUrl}
+                            alt="Preview"
+                            className="w-full h-48 object-contain"
+                            onError={() => {
+                              if (uploadMode === 'url') {
+                                toast.error('Failed to load image from URL');
+                              }
+                            }}
                           />
-                        ) : (
-                          <div>
-                            <input
-                              ref={fileInputRef}
-                              type="file"
-                              accept="image/*"
-                              onChange={handleImageUpload}
-                              className="hidden"
-                              id="image-upload"
-                            />
-                            <Button
-                              type="button"
-                              variant="outline"
-                              onClick={() => fileInputRef.current?.click()}
-                              className="w-full gap-2"
-                            >
-                              <Upload size={18} />
-                              Choose Image
-                            </Button>
-                          </div>
-                        )}
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="sm"
+                            onClick={handleRemoveImage}
+                            className="absolute top-2 right-2 gap-1"
+                          >
+                            <X size={14} />
+                            Remove
+                          </Button>
+                        </div>
+                      )}
 
-                        {(imagePreview || (uploadMode === 'url' && newItemForm.answerImageUrl)) && (
-                          <div className="relative rounded-lg overflow-hidden border-2 border-primary/20 bg-muted/30">
-                            <img
-                              src={imagePreview || newItemForm.answerImageUrl}
-                              alt="Preview"
-                              className="w-full h-48 object-contain"
-                              onError={() => {
-                                if (uploadMode === 'url') {
-                                  toast.error('Failed to load image from URL');
-                                }
-                              }}
-                            />
-                            <Button
-                              type="button"
-                              variant="destructive"
-                              size="sm"
-                              onClick={handleRemoveImage}
-                              className="absolute top-2 right-2 gap-1"
-                            >
-                              <X size={14} />
-                              Remove
-                            </Button>
-                          </div>
-                        )}
-
-                        <p className="text-xs text-muted-foreground">
-                          This image will appear when the answer is revealed to help reinforce memory. Max file size: 5MB
-                        </p>
-                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        This image will appear when the answer is revealed to help reinforce memory. Max file size: 5MB
+                      </p>
                     </div>
                   </div>
 

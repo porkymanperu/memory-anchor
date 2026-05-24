@@ -30,7 +30,7 @@ export interface MemoryItem {
   questions?: string[];
   answer: string;
   hints: [string, string];
-  association: MemoryAssociation;
+  association?: MemoryAssociation;
   imageUrl?: string;
   answerImageUrl?: string;
   relatedItems?: string[];
