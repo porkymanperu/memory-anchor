@@ -5,8 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Brain, Play } from '@phosphor-icons/react';
+import { Brain, Play, CheckCircle, XCircle, Calendar, Target } from '@phosphor-icons/react';
 import { motion } from 'framer-motion';
+import { format, isToday, parseISO } from 'date-fns';
 
 interface HomeProps {
   onStartPractice: (categories: CategoryId[], difficulty?: 'easy' | 'medium' | 'hard' | 'all') => void;
@@ -40,6 +41,24 @@ export function Home({ onStartPractice, userProgress }: HomeProps) {
     return acc;
   }, {} as Record<string, typeof categories>);
 
+  const hasCompletedToday = userProgress.sessions.some((session) => {
+    try {
+      return isToday(parseISO(session.date));
+    } catch {
+      return false;
+    }
+  });
+
+  const recentSessions = userProgress.sessions
+    .slice(-5)
+    .reverse()
+    .map((session) => {
+      const accuracy = session.questionsAsked > 0 
+        ? Math.round((session.questionsCorrect / session.questionsAsked) * 100)
+        : 0;
+      return { ...session, accuracy };
+    });
+
   return (
     <div className="pb-20 min-h-screen">
       <div className="max-w-2xl mx-auto px-4 py-8">
@@ -69,38 +88,71 @@ export function Home({ onStartPractice, userProgress }: HomeProps) {
           </motion.button>
         </div>
 
-        <Card className="mt-8 bg-secondary/30 border-secondary">
+        <Card className="mt-8 bg-card border-border">
           <CardHeader>
-            <CardTitle className="text-lg">How it Works</CardTitle>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Calendar size={20} className="text-primary" />
+              Today's Progress
+            </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex gap-3">
-              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm">
-                1
-              </div>
-              <div>
-                <p className="font-medium">Choose Categories</p>
-                <p className="text-sm text-muted-foreground">Select topics you want to practice</p>
-              </div>
+          <CardContent className="space-y-4">
+            <div className="flex items-center gap-3 p-4 rounded-lg bg-background">
+              {hasCompletedToday ? (
+                <>
+                  <CheckCircle size={32} weight="fill" className="text-success flex-shrink-0" />
+                  <div>
+                    <p className="font-semibold text-success">Session Complete!</p>
+                    <p className="text-sm text-muted-foreground">Great work today! Keep up your streak.</p>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <XCircle size={32} weight="fill" className="text-muted-foreground flex-shrink-0" />
+                  <div>
+                    <p className="font-semibold text-foreground">No Session Yet</p>
+                    <p className="text-sm text-muted-foreground">Start your practice session today!</p>
+                  </div>
+                </>
+              )}
             </div>
-            <div className="flex gap-3">
-              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm">
-                2
+
+            {recentSessions.length > 0 && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 mb-3">
+                  <Target size={16} className="text-muted-foreground" />
+                  <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                    Recent Sessions
+                  </h3>
+                </div>
+                {recentSessions.map((session) => (
+                  <div
+                    key={session.id}
+                    className="flex items-center justify-between p-3 rounded-lg bg-background border border-border hover:border-primary/50 transition-colors"
+                  >
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">
+                        {format(parseISO(session.date), 'MMM d, yyyy')}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {session.questionsCorrect}/{session.questionsAsked} correct
+                      </p>
+                    </div>
+                    <Badge 
+                      variant={session.accuracy >= 80 ? 'default' : session.accuracy >= 60 ? 'secondary' : 'outline'}
+                      className="font-semibold"
+                    >
+                      {session.accuracy}%
+                    </Badge>
+                  </div>
+                ))}
               </div>
-              <div>
-                <p className="font-medium">Answer Questions</p>
-                <p className="text-sm text-muted-foreground">Recall names through conversational prompts</p>
+            )}
+
+            {recentSessions.length === 0 && (
+              <div className="text-center py-8">
+                <p className="text-sm text-muted-foreground">No sessions yet. Start your first one!</p>
               </div>
-            </div>
-            <div className="flex gap-3">
-              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm">
-                3
-              </div>
-              <div>
-                <p className="font-medium">Learn Associations</p>
-                <p className="text-sm text-muted-foreground">Discover memory techniques for each answer</p>
-              </div>
-            </div>
+            )}
           </CardContent>
         </Card>
       </div>
