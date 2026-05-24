@@ -32,6 +32,7 @@ export function Library({ allItems, userProgress, setAllItems }: LibraryProps) {
   const [uploadMode, setUploadMode] = useState<'url' | 'upload'>('url');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
+  const [isGeneratingHints, setIsGeneratingHints] = useState(false);
   
   const [newItemForm, setNewItemForm] = useState({
     categoryId: 'actors' as CategoryId,
@@ -74,6 +75,65 @@ export function Library({ allItems, userProgress, setAllItems }: LibraryProps) {
     setImagePreview('');
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
+    }
+  };
+
+  const handleGenerateHints = async () => {
+    const answerValue = newItemForm.answer.trim();
+    
+    if (!answerValue) {
+      toast.error('Please enter an answer first');
+      return;
+    }
+
+    setIsGeneratingHints(true);
+    
+    try {
+      const categoryName = categories.find(c => c.id === newItemForm.categoryId)?.name || 'general topic';
+      
+      const prompt = window.spark.llmPrompt`You are a memory training assistant. Generate exactly TWO progressive hints for remembering the answer "${answerValue}" in the category "${categoryName}".
+
+The hints should:
+- Be helpful memory triggers without giving away the answer directly
+- Progress from more subtle to more obvious
+- Be concise (1-2 sentences each)
+- Be appropriate and understandable
+
+Return ONLY a valid JSON object with this exact structure:
+{
+  "hints": ["hint 1 text", "hint 2 text"],
+  "valid": true
+}
+
+If the answer is nonsensical, gibberish, inappropriate, or cannot be understood, return:
+{
+  "valid": false,
+  "message": "Unable to generate hints for this answer"
+}`;
+
+      const response = await window.spark.llm(prompt, 'gpt-4o', true);
+      const result = JSON.parse(response);
+      
+      if (!result.valid) {
+        toast.error(result.message || 'Unable to generate hints for this answer. Please provide a clear, understandable answer.');
+        return;
+      }
+      
+      if (result.hints && Array.isArray(result.hints) && result.hints.length >= 2) {
+        setNewItemForm({
+          ...newItemForm,
+          hint1: result.hints[0],
+          hint2: result.hints[1]
+        });
+        toast.success('Hints generated successfully!');
+      } else {
+        toast.error('Unexpected response format. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error generating hints:', error);
+      toast.error('Failed to generate hints. Please try again.');
+    } finally {
+      setIsGeneratingHints(false);
     }
   };
 
@@ -534,6 +594,20 @@ export function Library({ allItems, userProgress, setAllItems }: LibraryProps) {
                   </div>
 
                   <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <Label>Hints *</Label>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleGenerateHints}
+                        disabled={!newItemForm.answer.trim() || isGeneratingHints}
+                        className="gap-2 h-8 text-xs"
+                      >
+                        <Sparkle size={16} weight={isGeneratingHints ? 'regular' : 'fill'} className={isGeneratingHints ? 'animate-spin' : ''} />
+                        {isGeneratingHints ? 'Generating...' : 'Generate with AI'}
+                      </Button>
+                    </div>
                     <div className="space-y-2">
                       <Label htmlFor="hint1">Hint 1 *</Label>
                       <Textarea
