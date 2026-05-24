@@ -411,17 +411,6 @@ export function Progress({ userProgress }: ProgressProps) {
           </Card>
         )}
 
-        {userProgress.lastPracticeDate && (
-          <Card className="bg-secondary/30 border-secondary mt-6">
-            <CardHeader>
-              <CardTitle className="text-lg">Last Practice</CardTitle>
-              <CardDescription>
-                {formatDate(userProgress.lastPracticeDate)}
-              </CardDescription>
-            </CardHeader>
-          </Card>
-        )}
-
         {userProgress.totalSessions === 0 && (
           <Card className="bg-accent/10 border-accent/30">
             <CardHeader>
