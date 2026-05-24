@@ -4,7 +4,7 @@ import { shuffleArray, getItemsByCategories, updateStreak, getRandomQuestion } f
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Lightbulb, X, CheckCircle, ArrowRight } from '@phosphor-icons/react';
+import { Lightbulb, X, CheckCircle, ArrowRight, Sparkle } from '@phosphor-icons/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 
@@ -31,6 +31,13 @@ export function Practice({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [hintsRevealed, setHintsRevealed] = useState(0);
   const [answerRevealed, setAnswerRevealed] = useState(false);
+  const [aiAssociation, setAiAssociation] = useState<{
+    technique: string;
+    explanation: string;
+    imagery: string;
+    mnemonic?: string;
+  } | null>(null);
+  const [isGeneratingAssociation, setIsGeneratingAssociation] = useState(false);
   const [sessionStats, setSessionStats] = useState({
     correct: 0,
     hintsUsed: 0,
@@ -76,6 +83,46 @@ export function Practice({
     setAnswerRevealed(true);
   };
 
+  const generateMemoryAssociation = async () => {
+    if (isGeneratingAssociation || !currentItem) return;
+    
+    setIsGeneratingAssociation(true);
+    
+    try {
+      const prompt = (window.spark.llmPrompt as any)`You are a memory expert helping users create memorable associations.
+
+Generate a personalized memory association for the following:
+- Question: ${currentItem.displayQuestion}
+- Answer: ${currentItem.answer}
+- Category: ${currentItem.categoryId}
+
+Create a memory association that:
+1. Uses creative techniques like phonetics, visual similarity, emotions, or storytelling
+2. Provides a short explanation of why the association works
+3. Includes vivid mental imagery or a memorable scenario
+4. Is conversational, engaging, and helps strengthen long-term recall
+
+Return the result as JSON with this structure:
+{
+  "technique": "Name of the memory technique (e.g., 'Visual Association', 'Phonetic Link', 'Emotional Story')",
+  "explanation": "A brief 1-2 sentence explanation of why this association works",
+  "imagery": "A vivid, detailed mental image or scenario (2-3 sentences)",
+  "mnemonic": "Optional: A short memorable phrase or acronym if applicable"
+}`;
+
+      const response = await window.spark.llm(prompt, 'gpt-4o', true);
+      const association = JSON.parse(response);
+      
+      setAiAssociation(association);
+      toast.success('Memory association generated!');
+    } catch (error) {
+      console.error('Error generating association:', error);
+      toast.error('Failed to generate memory association. Please try again.');
+    } finally {
+      setIsGeneratingAssociation(false);
+    }
+  };
+
   const handleMarkCorrect = () => {
     setSessionStats(prev => ({ ...prev, correct: prev.correct + 1 }));
     handleNext();
@@ -86,6 +133,7 @@ export function Practice({
       setCurrentIndex(currentIndex + 1);
       setHintsRevealed(0);
       setAnswerRevealed(false);
+      setAiAssociation(null);
     } else {
       finishSession();
     }
@@ -294,6 +342,64 @@ export function Practice({
                         </div>
                       )}
                     </div>
+
+                    {!aiAssociation && (
+                      <div className="flex justify-center">
+                        <Button
+                          onClick={generateMemoryAssociation}
+                          disabled={isGeneratingAssociation}
+                          variant="outline"
+                          className="gap-2 border-2 border-dashed border-accent/40 hover:border-accent hover:bg-accent/10"
+                        >
+                          {isGeneratingAssociation ? (
+                            <>
+                              <div className="w-4 h-4 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+                              Generating...
+                            </>
+                          ) : (
+                            <>
+                              <Sparkle size={20} weight="duotone" className="text-accent" />
+                              Generate AI Memory Tip
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    )}
+
+                    {aiAssociation && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="bg-gradient-to-br from-accent/20 via-accent/10 to-accent/5 rounded-xl p-6 space-y-4 border-2 border-accent/30 shadow-lg"
+                      >
+                        <div className="flex items-center gap-2 mb-2">
+                          <Sparkle size={24} weight="duotone" className="text-accent" />
+                          <p className="font-bold text-lg text-accent">AI-Generated Memory Tip</p>
+                        </div>
+                        
+                        <div>
+                          <p className="font-semibold text-sm text-accent-foreground uppercase tracking-wide mb-2">
+                            {aiAssociation.technique}
+                          </p>
+                          <p className="text-foreground/80 text-sm mb-3">
+                            {aiAssociation.explanation}
+                          </p>
+                        </div>
+
+                        <div className="bg-card/80 backdrop-blur-sm rounded-lg p-4 border-l-4 border-accent">
+                          <p className="font-secondary text-base leading-relaxed text-foreground">
+                            {aiAssociation.imagery}
+                          </p>
+                        </div>
+
+                        {aiAssociation.mnemonic && (
+                          <div className="bg-accent/10 rounded-lg p-4 border border-accent/30">
+                            <p className="text-sm font-medium text-accent mb-1">Memory Trick</p>
+                            <p className="text-foreground italic">"{aiAssociation.mnemonic}"</p>
+                          </div>
+                        )}
+                      </motion.div>
+                    )}
 
                     <div className="flex gap-3 pt-4">
                       <Button
