@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { UserProgress, PracticeSession, CategoryId } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Clock, CheckCircle, XCircle, Lightbulb, Funnel, X } from '@phosphor-icons/react';
+import { Clock, CheckCircle, XCircle, Lightbulb, Funnel, X, Calendar, Target } from '@phosphor-icons/react';
 import { formatDate } from '@/lib/helpers';
 import { categories } from '@/lib/data';
 import { Badge } from '@/components/ui/badge';
@@ -12,6 +12,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { SessionCalendar } from '@/components/SessionCalendar';
+import { isToday, parseISO, format } from 'date-fns';
 
 interface ProgressProps {
   userProgress: UserProgress;
@@ -76,6 +77,24 @@ export function Progress({ userProgress }: ProgressProps) {
 
   const hasActiveFilters = selectedCategories.length > 0 || dateRange.start || dateRange.end;
 
+  const hasCompletedToday = userProgress.sessions.some((session) => {
+    try {
+      return isToday(parseISO(session.date));
+    } catch {
+      return false;
+    }
+  });
+
+  const recentSessions = userProgress.sessions
+    .slice(-5)
+    .reverse()
+    .map((session) => {
+      const accuracy = session.questionsAsked > 0 
+        ? Math.round((session.questionsCorrect / session.questionsAsked) * 100)
+        : 0;
+      return { ...session, accuracy };
+    });
+
   return (
     <div className="pb-20 min-h-screen">
       <div className="max-w-2xl mx-auto px-4 py-8">
@@ -85,6 +104,74 @@ export function Progress({ userProgress }: ProgressProps) {
             Track your memory training journey
           </p>
         </div>
+
+        <Card className="mb-6 bg-card border-border">
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Calendar size={20} className="text-primary" />
+              Today's Progress
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center gap-3 p-4 rounded-lg bg-background">
+              {hasCompletedToday ? (
+                <>
+                  <CheckCircle size={32} weight="fill" className="text-success flex-shrink-0" />
+                  <div>
+                    <p className="font-semibold text-success">Session Complete!</p>
+                    <p className="text-sm text-muted-foreground">Great work today! Keep up your streak.</p>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <XCircle size={32} weight="fill" className="text-muted-foreground flex-shrink-0" />
+                  <div>
+                    <p className="font-semibold text-foreground">No Session Yet</p>
+                    <p className="text-sm text-muted-foreground">Start your practice session today!</p>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {recentSessions.length > 0 && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 mb-3">
+                  <Target size={16} className="text-muted-foreground" />
+                  <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                    Recent Sessions
+                  </h3>
+                </div>
+                {recentSessions.map((session) => (
+                  <div
+                    key={session.id}
+                    className="flex items-center justify-between p-3 rounded-lg bg-background border border-border hover:border-primary/50 transition-colors"
+                  >
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">
+                        {format(parseISO(session.date), 'MMM d, yyyy')}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {session.questionsCorrect}/{session.questionsAsked} correct
+                      </p>
+                    </div>
+                    <Badge 
+                      variant={session.accuracy >= 80 ? 'default' : session.accuracy >= 60 ? 'secondary' : 'outline'}
+                      className="font-semibold"
+                    >
+                      {session.accuracy}%
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {recentSessions.length === 0 && (
+              <div className="text-center py-8">
+                <p className="text-sm text-muted-foreground">No sessions yet. Start your first one!</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         <Card className="mb-6 bg-gradient-to-br from-primary/5 to-accent/5 border-2 border-primary/20">
           <CardHeader>
