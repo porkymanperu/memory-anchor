@@ -354,11 +354,8 @@ Return the result as JSON with this structure:
                         </div>
                         
                         <div>
-                          <p className="font-semibold text-sm text-accent-foreground uppercase tracking-wide mb-2">
+                          <p className="font-semibold text-sm text-accent-foreground uppercase tracking-wide mb-3">
                             {aiAssociation.technique}
-                          </p>
-                          <p className="text-foreground/80 text-sm mb-3">
-                            {aiAssociation.explanation}
                           </p>
                         </div>
 
