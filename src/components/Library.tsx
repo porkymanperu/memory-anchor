@@ -130,7 +130,7 @@ If the answer is nonsensical, gibberish, inappropriate, or cannot be understood,
       const response = await window.spark.llm(prompt, 'gpt-4o', true);
       const result = JSON.parse(response);
       
-      if (!result.valid) {
+      if (result.valid === false) {
         toast.error(result.message || 'Unable to generate hints for this answer. Please provide a clear, understandable answer.');
         return;
       }
