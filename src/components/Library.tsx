@@ -1,10 +1,10 @@
 import { useState, useRef, useMemo } from 'react';
 import { CategoryId, MemoryItem, UserProgress, CategoryGroup } from '@/lib/types';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MagnifyingGlass, Star, X, ArrowLeft, Sparkle, FilmStrip, MusicNote, MapPin, ShoppingBag, User, FilmReel, MusicNotes, Microphone, Disc, Buildings, ForkKnife, Signpost, TShirt, Sneaker, Watch, Drop, Diamond, Plus, Image as ImageIcon, Upload, CaretLeft, CaretRight, CaretDoubleLeft, CaretDoubleRight } from '@phosphor-icons/react';
+import { MagnifyingGlass, Star, X, Sparkle, FilmStrip, MapPin, ShoppingBag, Plus, Image as ImageIcon, Upload, CaretLeft, CaretRight, CaretDoubleLeft, CaretDoubleRight } from '@phosphor-icons/react';
 import { categories } from '@/lib/data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
+import { MemoryItemDetail } from './MemoryItemDetail';
 
 interface LibraryProps {
   allItems: MemoryItem[];
@@ -278,7 +279,7 @@ If the answer is nonsensical, gibberish, inappropriate, or cannot be understood,
 
   const getCategoryIconComponent = (categoryId: string) => {
     const category = categories.find(c => c.id === categoryId);
-    if (!category) return User;
+    if (!category) return Sparkle;
     return getCategoryIcon(category.icon);
   };
 
@@ -304,222 +305,7 @@ If the answer is nonsensical, gibberish, inappropriate, or cannot be understood,
   };
 
   if (selectedItem) {
-    return (
-      <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="pb-20 min-h-screen"
-      >
-        <div className="max-w-2xl mx-auto px-4 py-6">
-          <Button
-            variant="ghost"
-            onClick={() => setSelectedItem(null)}
-            className="mb-4 -ml-2 group"
-          >
-            <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
-            Back to Library
-          </Button>
-
-          <motion.div
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.1 }}
-          >
-            <Card className="border-2 overflow-hidden shadow-lg">
-              <div 
-                className="h-2 w-full"
-                style={{ backgroundColor: getCategoryColor(selectedItem.categoryId) }}
-              />
-              <CardHeader>
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1">
-                    <Badge 
-                      variant="secondary" 
-                      className="mb-3 w-fit font-medium"
-                      style={{ 
-                        backgroundColor: `${getCategoryColor(selectedItem.categoryId)}15`, 
-                        color: getCategoryColor(selectedItem.categoryId),
-                        borderColor: `${getCategoryColor(selectedItem.categoryId)}30`,
-                      }}
-                    >
-                      {getCategoryName(selectedItem.categoryId)}
-                    </Badge>
-                    {selectedItem.answerType === 'multiple' && selectedItem.validAnswers ? (
-                      <>
-                        <CardTitle className="text-3xl mb-3 leading-tight">
-                          <Badge variant="outline" className="mb-2">Multiple-Value Answer</Badge>
-                        </CardTitle>
-                        <CardDescription className="text-base leading-relaxed mb-4">
-                          {selectedItem.question}
-                        </CardDescription>
-                        <div className="space-y-2">
-                          <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Valid Answers:</p>
-                          {selectedItem.validAnswers.map((answer, index) => (
-                            <div key={index} className="flex items-center gap-2 text-lg">
-                              <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground font-bold text-xs flex-shrink-0">{index + 1}</span>
-                              <span className="font-semibold">{answer}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <CardTitle className="text-3xl mb-3 leading-tight">{selectedItem.answer}</CardTitle>
-                        <CardDescription className="text-base leading-relaxed">
-                          {selectedItem.question}
-                        </CardDescription>
-                      </>
-                    )}
-                  </div>
-                  {userProgress.favoriteItems?.includes(selectedItem.id) && (
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ type: "spring", stiffness: 200 }}
-                    >
-                      <Star size={24} weight="fill" className="text-accent flex-shrink-0" />
-                    </motion.div>
-                  )}
-                </div>
-              </CardHeader>
-
-              <CardContent className="space-y-6">
-                {selectedItem.answerImageUrl && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.1 }}
-                    className="rounded-xl overflow-hidden bg-muted/30 border-2 border-primary/20"
-                  >
-                    <img
-                      src={selectedItem.answerImageUrl}
-                      alt={`Visual aid for ${selectedItem.answer}`}
-                      className="w-full h-auto max-h-80 object-contain"
-                    />
-                    <div className="px-4 py-2 bg-primary/5 border-t border-primary/10">
-                      <p className="text-xs text-muted-foreground text-center">Memory Aid Image</p>
-                    </div>
-                  </motion.div>
-                )}
-
-                <div className="space-y-4">
-                  {selectedItem.questions && selectedItem.questions.length > 0 && (
-                    <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent rounded-xl p-5 border-2 border-primary/20">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Sparkle size={20} weight="fill" className="text-primary" />
-                        <h3 className="text-base font-bold text-primary uppercase tracking-wide">
-                          Question Variations
-                        </h3>
-                        <Badge variant="secondary" className="ml-auto text-xs font-semibold bg-primary/20 text-primary border-primary/30">
-                          {selectedItem.questions.length} variations
-                        </Badge>
-                      </div>
-                      <p className="text-xs text-muted-foreground mb-4 leading-relaxed">
-                        During practice, one of these questions will appear randomly to simulate real-world recall scenarios.
-                      </p>
-                      <div className="space-y-2">
-                        {selectedItem.questions.map((q, index) => (
-                          <motion.div
-                            key={index}
-                            initial={{ x: -20, opacity: 0 }}
-                            animate={{ x: 0, opacity: 1 }}
-                            transition={{ delay: 0.1 + index * 0.05 }}
-                            className="bg-card rounded-lg p-3.5 border-l-4 border-primary shadow-sm"
-                          >
-                            <p className="text-sm leading-relaxed">
-                              <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground font-bold text-xs mr-2.5">{index + 1}</span>
-                              {q}
-                            </p>
-                          </motion.div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  <div>
-                    <div className="flex items-center gap-2 mb-3">
-                      <Sparkle size={16} weight="fill" className="text-accent" />
-                      <h3 className="text-sm font-bold text-primary uppercase tracking-wide">
-                        Hints
-                      </h3>
-                    </div>
-                    <div className="space-y-2">
-                      {selectedItem.hints.map((hint, index) => (
-                        <motion.div
-                          key={index}
-                          initial={{ x: -20, opacity: 0 }}
-                          animate={{ x: 0, opacity: 1 }}
-                          transition={{ delay: (selectedItem.questions?.length || 0) * 0.05 + 0.2 + index * 0.1 }}
-                          className="bg-gradient-to-r from-accent/10 to-transparent rounded-lg p-3 border-l-2 border-accent"
-                        >
-                          <p className="text-sm">
-                            <span className="font-semibold text-accent mr-2">Hint {index + 1}:</span>
-                            {hint}
-                          </p>
-                        </motion.div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {selectedItem.association && (
-                    <motion.div
-                      initial={{ y: 20, opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
-                      transition={{ delay: 0.4 }}
-                      className="bg-secondary/20 rounded-xl p-5 space-y-4 border border-secondary/30"
-                    >
-                      <div>
-                        <h3 className="text-sm font-bold text-primary uppercase tracking-wide mb-2">
-                          {selectedItem.association.technique}
-                        </h3>
-                        <p className="text-sm text-muted-foreground leading-relaxed">
-                          {selectedItem.association.explanation}
-                        </p>
-                      </div>
-                      
-                      <div className="bg-card rounded-lg p-4 border-l-4 border-primary shadow-sm">
-                        <h4 className="text-xs font-semibold text-primary uppercase tracking-wide mb-2 flex items-center gap-1">
-                          Mental Imagery
-                        </h4>
-                        <p className="font-secondary text-sm leading-relaxed italic">
-                          {selectedItem.association.imagery}
-                        </p>
-                      </div>
-                      
-                      {selectedItem.association.mnemonic && (
-                        <div className="bg-gradient-to-br from-accent/10 to-accent/5 rounded-lg p-4 border border-accent/30">
-                          <h4 className="text-xs font-semibold text-accent uppercase tracking-wide mb-2">
-                            Mnemonic Device
-                          </h4>
-                          <p className="text-sm italic text-foreground font-medium">
-                            "{selectedItem.association.mnemonic}"
-                          </p>
-                        </div>
-                      )}
-                    </motion.div>
-                  )}
-
-                  {selectedItem.difficulty && (
-                    <div className="flex items-center gap-2 pt-2">
-                      <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                        Difficulty:
-                      </span>
-                      <Badge 
-                        variant={selectedItem.difficulty === 'easy' ? 'default' : selectedItem.difficulty === 'medium' ? 'secondary' : 'destructive'}
-                        className="capitalize"
-                      >
-                        {selectedItem.difficulty}
-                      </Badge>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        </div>
-      </motion.div>
-    );
+    return <MemoryItemDetail item={selectedItem} onBack={() => setSelectedItem(null)} />;
   }
 
   return (
