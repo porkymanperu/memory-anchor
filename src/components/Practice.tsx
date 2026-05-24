@@ -441,7 +441,7 @@ Return the result as JSON with this structure:
                         </div>
 
                         <div className="bg-card/80 backdrop-blur-sm rounded-lg p-4 border-l-4 border-accent">
-                          <p className="font-secondary text-base leading-relaxed text-foreground">
+                          <p className="font-secondary text-lg leading-relaxed text-foreground">
                             {aiAssociation.imagery}
                           </p>
                         </div>
