@@ -23,6 +23,7 @@ export function Progress({ userProgress }: ProgressProps) {
   const [selectedCategories, setSelectedCategories] = useState<CategoryId[]>([]);
   const [dateRange, setDateRange] = useState<{ start: string; end: string }>({ start: '', end: '' });
   const [showFilters, setShowFilters] = useState(false);
+  const [questionFilter, setQuestionFilter] = useState<'all' | 'correct' | 'incorrect'>('all');
 
   const getCategoryName = (categoryId: string) => {
     return categories.find(c => c.id === categoryId)?.name || categoryId;
@@ -423,125 +424,180 @@ export function Progress({ userProgress }: ProgressProps) {
         )}
       </div>
 
-      <Dialog open={selectedSession !== null} onOpenChange={(open) => !open && setSelectedSession(null)}>
+      <Dialog open={selectedSession !== null} onOpenChange={(open) => {
+        if (!open) {
+          setSelectedSession(null);
+          setQuestionFilter('all');
+        }
+      }}>
         <DialogContent className="max-w-lg h-[90vh] flex flex-col p-0">
-          {selectedSession && (
-            <>
-              <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 flex-shrink-0 border-b">
-                <DialogTitle className="text-lg sm:text-xl">Session Details</DialogTitle>
-                <DialogDescription className="text-sm">
-                  {formatDate(selectedSession.date)}
-                </DialogDescription>
-              </DialogHeader>
-              
-              <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4">
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-3">
-                    <Card>
-                      <CardContent className="pt-4 pb-4 text-center px-2">
-                        <p className="text-2xl font-bold text-success mb-1 break-words">
-                          {Math.round((selectedSession.questionsCorrect / selectedSession.questionsAsked) * 100)}%
-                        </p>
-                        <p className="text-xs text-muted-foreground">Accuracy</p>
-                      </CardContent>
-                    </Card>
-                    
-                    <Card>
-                      <CardContent className="pt-4 pb-4 text-center px-2">
-                        <p className="text-2xl font-bold mb-1 break-words">{selectedSession.averageTime}s</p>
-                        <p className="text-xs text-muted-foreground">Avg Time</p>
-                      </CardContent>
-                    </Card>
-                  </div>
+          {selectedSession && (() => {
+            const filteredQuestions = selectedSession.questions?.filter((q) => {
+              if (questionFilter === 'correct') return q.wasCorrect;
+              if (questionFilter === 'incorrect') return !q.wasCorrect;
+              return true;
+            }) || [];
 
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between gap-2 p-2.5 bg-success/10 rounded-lg border border-success/20">
-                      <div className="flex items-center gap-2 min-w-0 flex-1">
-                        <CheckCircle size={18} weight="fill" className="text-success flex-shrink-0" />
-                        <span className="font-medium text-sm truncate">Correct Answers</span>
+            return (
+              <>
+                <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 flex-shrink-0 border-b">
+                  <DialogTitle className="text-lg sm:text-xl">Session Details</DialogTitle>
+                  <DialogDescription className="text-sm">
+                    {formatDate(selectedSession.date)}
+                  </DialogDescription>
+                </DialogHeader>
+                
+                <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4">
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-3">
+                      <Card>
+                        <CardContent className="pt-4 pb-4 text-center px-2">
+                          <p className="text-2xl font-bold text-success mb-1 break-words">
+                            {Math.round((selectedSession.questionsCorrect / selectedSession.questionsAsked) * 100)}%
+                          </p>
+                          <p className="text-xs text-muted-foreground">Accuracy</p>
+                        </CardContent>
+                      </Card>
+                      
+                      <Card>
+                        <CardContent className="pt-4 pb-4 text-center px-2">
+                          <p className="text-2xl font-bold mb-1 break-words">{selectedSession.averageTime}s</p>
+                          <p className="text-xs text-muted-foreground">Avg Time</p>
+                        </CardContent>
+                      </Card>
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between gap-2 p-2.5 bg-success/10 rounded-lg border border-success/20">
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                          <CheckCircle size={18} weight="fill" className="text-success flex-shrink-0" />
+                          <span className="font-medium text-sm truncate">Correct Answers</span>
+                        </div>
+                        <span className="text-base font-bold flex-shrink-0">{selectedSession.questionsCorrect}</span>
                       </div>
-                      <span className="text-base font-bold flex-shrink-0">{selectedSession.questionsCorrect}</span>
-                    </div>
 
-                    <div className="flex items-center justify-between gap-2 p-2.5 bg-destructive/10 rounded-lg border border-destructive/20">
-                      <div className="flex items-center gap-2 min-w-0 flex-1">
-                        <XCircle size={18} weight="fill" className="text-destructive flex-shrink-0" />
-                        <span className="font-medium text-sm truncate">Incorrect</span>
+                      <div className="flex items-center justify-between gap-2 p-2.5 bg-destructive/10 rounded-lg border border-destructive/20">
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                          <XCircle size={18} weight="fill" className="text-destructive flex-shrink-0" />
+                          <span className="font-medium text-sm truncate">Incorrect</span>
+                        </div>
+                        <span className="text-base font-bold flex-shrink-0">
+                          {selectedSession.questionsAsked - selectedSession.questionsCorrect}
+                        </span>
                       </div>
-                      <span className="text-base font-bold flex-shrink-0">
-                        {selectedSession.questionsAsked - selectedSession.questionsCorrect}
-                      </span>
-                    </div>
 
-                    <div className="flex items-center justify-between gap-2 p-2.5 bg-accent/10 rounded-lg border border-accent/20">
-                      <div className="flex items-center gap-2 min-w-0 flex-1">
-                        <Lightbulb size={18} weight="fill" className="text-accent flex-shrink-0" />
-                        <span className="font-medium text-sm truncate">Hints Used</span>
+                      <div className="flex items-center justify-between gap-2 p-2.5 bg-accent/10 rounded-lg border border-accent/20">
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                          <Lightbulb size={18} weight="fill" className="text-accent flex-shrink-0" />
+                          <span className="font-medium text-sm truncate">Hints Used</span>
+                        </div>
+                        <span className="text-base font-bold flex-shrink-0">{selectedSession.hintsUsed}</span>
                       </div>
-                      <span className="text-base font-bold flex-shrink-0">{selectedSession.hintsUsed}</span>
                     </div>
-                  </div>
 
-                  <div>
-                    <p className="text-xs font-medium text-muted-foreground mb-2">Categories Practiced</p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {selectedSession.categoryIds.map((catId) => (
-                        <Badge key={catId} variant="secondary" className="text-xs">
-                          {getCategoryName(catId)}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-
-                  {selectedSession.questions && selectedSession.questions.length > 0 && (
                     <div>
-                      <p className="text-xs font-medium text-muted-foreground mb-2">Questions Asked ({selectedSession.questions.length})</p>
-                      <div className="space-y-2">
-                        {selectedSession.questions.map((q, index) => (
-                          <Card key={index} className={`border ${q.wasCorrect ? 'border-success/30 bg-success/5' : 'border-destructive/30 bg-destructive/5'}`}>
-                            <CardContent className="p-2.5">
-                              <div className="flex items-start gap-2">
-                                {q.wasCorrect ? (
-                                  <CheckCircle size={16} weight="fill" className="text-success flex-shrink-0 mt-0.5" />
-                                ) : (
-                                  <XCircle size={16} weight="fill" className="text-destructive flex-shrink-0 mt-0.5" />
-                                )}
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-xs font-medium mb-1 break-words">{q.question}</p>
-                                  <div className="text-xs">
-                                    {q.answerType === 'multiple' && q.validAnswers ? (
-                                      <div>
-                                        <p className="text-muted-foreground mb-1">Valid answers:</p>
-                                        <div className="flex flex-wrap gap-1">
-                                          {q.validAnswers.map((answer, i) => (
-                                            <Badge key={i} variant="secondary" className="text-xs break-all">
-                                              {answer}
-                                            </Badge>
-                                          ))}
-                                        </div>
-                                      </div>
-                                    ) : (
-                                      <p className="text-primary font-medium break-words">{q.answer}</p>
-                                    )}
-                                  </div>
-                                  {q.hintsUsed > 0 && (
-                                    <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">
-                                      <Lightbulb size={12} weight="fill" className="text-accent flex-shrink-0" />
-                                      <span>{q.hintsUsed} hint{q.hintsUsed > 1 ? 's' : ''} used</span>
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            </CardContent>
-                          </Card>
+                      <p className="text-xs font-medium text-muted-foreground mb-2">Categories Practiced</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {selectedSession.categoryIds.map((catId) => (
+                          <Badge key={catId} variant="secondary" className="text-xs">
+                            {getCategoryName(catId)}
+                          </Badge>
                         ))}
                       </div>
                     </div>
-                  )}
+
+                    {selectedSession.questions && selectedSession.questions.length > 0 && (
+                      <div>
+                        <div className="flex items-center justify-between gap-2 mb-3">
+                          <p className="text-xs font-medium text-muted-foreground">
+                            Questions Asked ({filteredQuestions.length})
+                          </p>
+                        </div>
+                        
+                        <div className="flex gap-2 mb-3">
+                          <Button
+                            variant={questionFilter === 'all' ? 'default' : 'outline'}
+                            size="sm"
+                            onClick={() => setQuestionFilter('all')}
+                            className="flex-1 text-xs h-8"
+                          >
+                            All ({selectedSession.questions.length})
+                          </Button>
+                          <Button
+                            variant={questionFilter === 'correct' ? 'default' : 'outline'}
+                            size="sm"
+                            onClick={() => setQuestionFilter('correct')}
+                            className="flex-1 text-xs h-8"
+                          >
+                            <CheckCircle size={14} weight="fill" className="mr-1" />
+                            Correct ({selectedSession.questions.filter(q => q.wasCorrect).length})
+                          </Button>
+                          <Button
+                            variant={questionFilter === 'incorrect' ? 'default' : 'outline'}
+                            size="sm"
+                            onClick={() => setQuestionFilter('incorrect')}
+                            className="flex-1 text-xs h-8"
+                          >
+                            <XCircle size={14} weight="fill" className="mr-1" />
+                            Failed ({selectedSession.questions.filter(q => !q.wasCorrect).length})
+                          </Button>
+                        </div>
+
+                        <div className="space-y-2">
+                          {filteredQuestions.length > 0 ? (
+                            filteredQuestions.map((q, index) => (
+                              <Card key={index} className={`border ${q.wasCorrect ? 'border-success/30 bg-success/5' : 'border-destructive/30 bg-destructive/5'}`}>
+                                <CardContent className="p-2.5">
+                                  <div className="flex items-start gap-2">
+                                    {q.wasCorrect ? (
+                                      <CheckCircle size={16} weight="fill" className="text-success flex-shrink-0 mt-0.5" />
+                                    ) : (
+                                      <XCircle size={16} weight="fill" className="text-destructive flex-shrink-0 mt-0.5" />
+                                    )}
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-xs font-medium mb-1 break-words">{q.question}</p>
+                                      <div className="text-xs">
+                                        {q.answerType === 'multiple' && q.validAnswers ? (
+                                          <div>
+                                            <p className="text-muted-foreground mb-1">Valid answers:</p>
+                                            <div className="flex flex-wrap gap-1">
+                                              {q.validAnswers.map((answer, i) => (
+                                                <Badge key={i} variant="secondary" className="text-xs break-all">
+                                                  {answer}
+                                                </Badge>
+                                              ))}
+                                            </div>
+                                          </div>
+                                        ) : (
+                                          <p className="text-primary font-medium break-words">{q.answer}</p>
+                                        )}
+                                      </div>
+                                      {q.hintsUsed > 0 && (
+                                        <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">
+                                          <Lightbulb size={12} weight="fill" className="text-accent flex-shrink-0" />
+                                          <span>{q.hintsUsed} hint{q.hintsUsed > 1 ? 's' : ''} used</span>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            ))
+                          ) : (
+                            <div className="text-center py-8">
+                              <p className="text-sm text-muted-foreground">
+                                No {questionFilter} questions in this session
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </>
-          )}
+              </>
+            );
+          })()}
         </DialogContent>
       </Dialog>
     </div>
