@@ -107,7 +107,7 @@ export function Library({ allItems, userProgress, setAllItems }: LibraryProps) {
         ? 'multiple answers: ' + answerValue 
         : 'answer: ' + answerValue;
       
-      const prompt = (window.spark.llmPrompt as any)`You are a memory training assistant. Generate exactly TWO progressive hints for remembering the ${contextType} in the category "${categoryName}".
+      const promptText = `You are a memory training assistant. Generate exactly TWO progressive hints for remembering the ${contextType} in the category "${categoryName}".
 
 The hints should:
 - Be helpful memory triggers without giving away the answer(s) directly
@@ -127,7 +127,7 @@ If the answer is nonsensical, gibberish, inappropriate, or cannot be understood,
   "message": "Unable to generate hints for this answer"
 }`;
 
-      const response = await window.spark.llm(prompt, 'gpt-4o', true);
+      const response = await window.spark.llm(promptText, 'gpt-4o', true);
       const result = JSON.parse(response);
       
       if (result.valid === false) {
