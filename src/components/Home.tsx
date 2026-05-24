@@ -17,7 +17,7 @@ interface HomeProps {
 export function Home({ onStartPractice, userProgress }: HomeProps) {
   const [showCategoryDialog, setShowCategoryDialog] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<CategoryId[]>([]);
-  const [selectedDifficulty, setSelectedDifficulty] = useState<'easy' | 'medium' | 'hard' | 'all'>('all');
+  const [selectedDifficulty, setSelectedDifficulty] = useState<'easy' | 'medium' | 'hard' | 'all'>('easy');
 
   const toggleCategory = (categoryId: CategoryId) => {
     setSelectedCategories(prev =>
@@ -171,8 +171,8 @@ export function Home({ onStartPractice, userProgress }: HomeProps) {
               <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
                 Difficulty Level
               </h3>
-              <div className="grid grid-cols-4 gap-2">
-                {(['all', 'easy', 'medium', 'hard'] as const).map((difficulty) => (
+              <div className="grid grid-cols-3 gap-2">
+                {(['easy', 'medium', 'hard'] as const).map((difficulty) => (
                   <button
                     key={difficulty}
                     onClick={() => setSelectedDifficulty(difficulty)}
@@ -187,7 +187,6 @@ export function Home({ onStartPractice, userProgress }: HomeProps) {
                 ))}
               </div>
               <p className="text-xs text-muted-foreground mt-2">
-                {selectedDifficulty === 'all' && 'Practice questions from all difficulty levels'}
                 {selectedDifficulty === 'easy' && 'Simple questions, perfect for beginners'}
                 {selectedDifficulty === 'medium' && 'Moderate challenge, good for practice'}
                 {selectedDifficulty === 'hard' && 'Advanced questions for experienced learners'}
