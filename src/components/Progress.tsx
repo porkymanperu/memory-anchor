@@ -141,21 +141,37 @@ export function Progress({ userProgress }: ProgressProps) {
           </CardContent>
         </Card>
 
-        {userProgress.sessions && userProgress.sessions.length > 0 && (
-          <>
-            <SessionCalendar 
-              sessions={userProgress.sessions}
-              onDateClick={(date, sessions) => {
-                if (sessions.length === 1) {
-                  setSelectedSession(sessions[0]);
-                } else {
-                  const dateKey = date.toISOString().split('T')[0];
-                  setDateRange({ start: dateKey, end: dateKey });
-                }
-              }}
-            />
+        <Card className="mb-6 bg-gradient-to-br from-primary/5 to-accent/5 border-2 border-primary/20">
+          <CardHeader>
+            <CardTitle className="text-2xl">Practice Calendar</CardTitle>
+            <CardDescription>
+              Visual overview of your practice sessions - tap any date to view details
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {userProgress.sessions && userProgress.sessions.length > 0 ? (
+              <SessionCalendar 
+                sessions={userProgress.sessions}
+                onDateClick={(date, sessions) => {
+                  if (sessions.length === 1) {
+                    setSelectedSession(sessions[0]);
+                  } else {
+                    const dateKey = date.toISOString().split('T')[0];
+                    setDateRange({ start: dateKey, end: dateKey });
+                  }
+                }}
+              />
+            ) : (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground mb-2">No sessions yet</p>
+                <p className="text-sm text-muted-foreground">Complete your first practice session to see it appear on the calendar</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
-            <Card className="mt-6">
+        {userProgress.sessions && userProgress.sessions.length > 0 && (
+          <Card className="mt-6">
               <CardHeader>
                 <div className="flex items-start justify-between gap-4 mb-2">
                   <div className="flex-1">
@@ -360,7 +376,6 @@ export function Progress({ userProgress }: ProgressProps) {
               )}
             </CardContent>
           </Card>
-          </>
         )}
 
         {userProgress.lastPracticeDate && (
