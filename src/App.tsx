@@ -13,6 +13,7 @@ type View = 'home' | 'practice' | 'library' | 'progress';
 function App() {
   const [currentView, setCurrentView] = useState<View>('home');
   const [selectedCategories, setSelectedCategories] = useState<CategoryId[]>([]);
+  const [selectedDifficulty, setSelectedDifficulty] = useState<'easy' | 'medium' | 'hard' | 'all'>('all');
   
   const [allItems, setAllItems] = useKV<MemoryItem[]>('memory-items', sampleMemoryItems);
   const [userProgress, setUserProgress] = useKV<UserProgress>('user-progress', {
@@ -27,8 +28,9 @@ function App() {
     customItems: []
   });
 
-  const startPractice = (categories: CategoryId[]) => {
+  const startPractice = (categories: CategoryId[], difficulty: 'easy' | 'medium' | 'hard' | 'all' = 'all') => {
     setSelectedCategories(categories);
+    setSelectedDifficulty(difficulty);
     setCurrentView('practice');
   };
 
@@ -59,6 +61,7 @@ function App() {
       {currentView === 'practice' && allItems && userProgress && (
         <Practice 
           selectedCategories={selectedCategories}
+          selectedDifficulty={selectedDifficulty}
           allItems={allItems}
           userProgress={userProgress}
           setUserProgress={setUserProgress as any}

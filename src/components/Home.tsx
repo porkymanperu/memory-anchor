@@ -9,13 +9,14 @@ import { Brain, Fire, Trophy } from '@phosphor-icons/react';
 import { motion } from 'framer-motion';
 
 interface HomeProps {
-  onStartPractice: (categories: CategoryId[]) => void;
+  onStartPractice: (categories: CategoryId[], difficulty?: 'easy' | 'medium' | 'hard' | 'all') => void;
   userProgress: UserProgress;
 }
 
 export function Home({ onStartPractice, userProgress }: HomeProps) {
   const [showCategoryDialog, setShowCategoryDialog] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<CategoryId[]>([]);
+  const [selectedDifficulty, setSelectedDifficulty] = useState<'easy' | 'medium' | 'hard' | 'all'>('all');
 
   const toggleCategory = (categoryId: CategoryId) => {
     setSelectedCategories(prev =>
@@ -27,7 +28,7 @@ export function Home({ onStartPractice, userProgress }: HomeProps) {
 
   const handleStartPractice = () => {
     if (selectedCategories.length > 0) {
-      onStartPractice(selectedCategories);
+      onStartPractice(selectedCategories, selectedDifficulty);
     }
   };
 
@@ -149,11 +150,37 @@ export function Home({ onStartPractice, userProgress }: HomeProps) {
           <DialogHeader>
             <DialogTitle>Select Practice Categories</DialogTitle>
             <DialogDescription>
-              Choose one or more categories to practice
+              Choose categories and difficulty level
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-6 py-4">
+            <div>
+              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+                Difficulty Level
+              </h3>
+              <div className="grid grid-cols-4 gap-2">
+                {(['all', 'easy', 'medium', 'hard'] as const).map((difficulty) => (
+                  <button
+                    key={difficulty}
+                    onClick={() => setSelectedDifficulty(difficulty)}
+                    className={`px-4 py-3 rounded-lg border-2 transition-all font-medium text-sm capitalize ${
+                      selectedDifficulty === difficulty
+                        ? 'border-primary bg-primary text-primary-foreground'
+                        : 'border-border hover:border-primary/50 bg-card'
+                    }`}
+                  >
+                    {difficulty}
+                  </button>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                {selectedDifficulty === 'all' && 'Practice questions from all difficulty levels'}
+                {selectedDifficulty === 'easy' && 'Simple questions, perfect for beginners'}
+                {selectedDifficulty === 'medium' && 'Moderate challenge, good for practice'}
+                {selectedDifficulty === 'hard' && 'Advanced questions for experienced learners'}
+              </p>
+            </div>
             {Object.entries(groupedCategories).map(([group, cats]) => (
               <div key={group}>
                 <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">

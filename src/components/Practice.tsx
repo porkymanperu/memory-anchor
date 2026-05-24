@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 
 interface PracticeProps {
   selectedCategories: CategoryId[];
+  selectedDifficulty: 'easy' | 'medium' | 'hard' | 'all';
   allItems: MemoryItem[];
   userProgress: UserProgress;
   setUserProgress: (updater: (prev: UserProgress) => UserProgress) => void;
@@ -20,6 +21,7 @@ type SessionItem = MemoryItem & { displayQuestion: string };
 
 export function Practice({
   selectedCategories,
+  selectedDifficulty,
   allItems,
   userProgress,
   setUserProgress,
@@ -36,14 +38,19 @@ export function Practice({
   });
 
   useEffect(() => {
-    const items = getItemsByCategories(allItems, selectedCategories);
+    let items = getItemsByCategories(allItems, selectedCategories);
+    
+    if (selectedDifficulty !== 'all') {
+      items = items.filter(item => item.difficulty === selectedDifficulty);
+    }
+    
     const shuffled = shuffleArray(items).slice(0, 10);
     const withDisplayQuestions = shuffled.map(item => ({
       ...item,
       displayQuestion: getRandomQuestion(item)
     }));
     setSessionItems(withDisplayQuestions);
-  }, [allItems, selectedCategories]);
+  }, [allItems, selectedCategories, selectedDifficulty]);
 
   const currentItem = sessionItems[currentIndex];
   const progressPercent = sessionItems.length > 0 ? ((currentIndex + 1) / sessionItems.length) * 100 : 0;
