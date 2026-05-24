@@ -165,14 +165,14 @@ export function Library({ allItems, userProgress }: LibraryProps) {
           />
         </div>
 
-        <div className="mb-6">
-          <ScrollArea className="w-full">
-            <div className="flex gap-2 pb-2">
+        <div className="mb-6 -mx-4 px-4">
+          <div className="overflow-x-auto">
+            <div className="flex gap-2 pb-2 min-w-max">
               <Button
                 variant={selectedCategory === 'all' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setSelectedCategory('all')}
-                className="whitespace-nowrap"
+                className="whitespace-nowrap flex-shrink-0"
               >
                 All ({allItems.length})
               </Button>
@@ -182,7 +182,7 @@ export function Library({ allItems, userProgress }: LibraryProps) {
                   variant={selectedCategory === cat.id ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setSelectedCategory(cat.id)}
-                  className="whitespace-nowrap"
+                  className="whitespace-nowrap flex-shrink-0"
                   style={
                     selectedCategory === cat.id
                       ? { backgroundColor: cat.color, borderColor: cat.color }
@@ -193,7 +193,7 @@ export function Library({ allItems, userProgress }: LibraryProps) {
                 </Button>
               ))}
             </div>
-          </ScrollArea>
+          </div>
         </div>
 
         <div className="space-y-2">
