@@ -1,10 +1,10 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { CategoryId, MemoryItem, UserProgress, CategoryGroup } from '@/lib/types';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MagnifyingGlass, Star, X, ArrowLeft, Sparkle, FilmStrip, MusicNote, MapPin, ShoppingBag, User, FilmReel, MusicNotes, Microphone, Disc, Buildings, ForkKnife, Signpost, TShirt, Sneaker, Watch, Drop, Diamond, Plus, Image as ImageIcon, Upload } from '@phosphor-icons/react';
+import { MagnifyingGlass, Star, X, ArrowLeft, Sparkle, FilmStrip, MusicNote, MapPin, ShoppingBag, User, FilmReel, MusicNotes, Microphone, Disc, Buildings, ForkKnife, Signpost, TShirt, Sneaker, Watch, Drop, Diamond, Plus, Image as ImageIcon, Upload, CaretLeft, CaretRight, CaretDoubleLeft, CaretDoubleRight } from '@phosphor-icons/react';
 import { categories } from '@/lib/data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -30,6 +30,8 @@ export function Library({ allItems, userProgress, setAllItems }: LibraryProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [imagePreview, setImagePreview] = useState<string>('');
   const [uploadMode, setUploadMode] = useState<'url' | 'upload'>('url');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20;
   
   const [newItemForm, setNewItemForm] = useState({
     categoryId: 'actors' as CategoryId,
@@ -134,14 +136,55 @@ export function Library({ allItems, userProgress, setAllItems }: LibraryProps) {
     setUploadMode('url');
   };
 
-  const filteredItems = allItems.filter(item => {
-    const matchesSearch = 
-      item.answer.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (item.questions && item.questions.some(q => q.toLowerCase().includes(searchQuery.toLowerCase())));
-    const matchesCategory = selectedCategory === 'all' || item.categoryId === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
+  const filteredItems = useMemo(() => {
+    const items = allItems.filter(item => {
+      const matchesSearch = 
+        item.answer.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (item.questions && item.questions.some(q => q.toLowerCase().includes(searchQuery.toLowerCase())));
+      const matchesCategory = selectedCategory === 'all' || item.categoryId === selectedCategory;
+      return matchesSearch && matchesCategory;
+    });
+    setCurrentPage(1);
+    return items;
+  }, [allItems, searchQuery, selectedCategory]);
+
+  const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
+  const paginatedItems = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredItems.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredItems, currentPage, itemsPerPage]);
+
+  const getPageNumbers = () => {
+    const pages: (number | string)[] = [];
+    const maxVisible = 5;
+    
+    if (totalPages <= maxVisible) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      if (currentPage <= 3) {
+        for (let i = 1; i <= 4; i++) pages.push(i);
+        pages.push('...');
+        pages.push(totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        pages.push(1);
+        pages.push('...');
+        for (let i = totalPages - 3; i <= totalPages; i++) pages.push(i);
+      } else {
+        pages.push(1);
+        pages.push('...');
+        pages.push(currentPage - 1);
+        pages.push(currentPage);
+        pages.push(currentPage + 1);
+        pages.push('...');
+        pages.push(totalPages);
+      }
+    }
+    
+    return pages;
+  };
 
   const getCategoryName = (categoryId: string) => {
     return categories.find(c => c.id === categoryId)?.name || categoryId;
@@ -808,11 +851,16 @@ export function Library({ allItems, userProgress, setAllItems }: LibraryProps) {
               <>
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-sm text-muted-foreground">
-                    Showing <span className="font-semibold text-foreground">{filteredItems.length}</span> {filteredItems.length === 1 ? 'item' : 'items'}
+                    Showing <span className="font-semibold text-foreground">{((currentPage - 1) * itemsPerPage) + 1}-{Math.min(currentPage * itemsPerPage, filteredItems.length)}</span> of <span className="font-semibold text-foreground">{filteredItems.length}</span> {filteredItems.length === 1 ? 'item' : 'items'}
                   </p>
+                  {totalPages > 1 && (
+                    <p className="text-xs text-muted-foreground">
+                      Page {currentPage} of {totalPages}
+                    </p>
+                  )}
                 </div>
                 <div className="grid gap-2">
-                  {filteredItems.map((item, index) => {
+                  {paginatedItems.map((item, index) => {
                     const ItemIcon = getCategoryIconComponent(item.categoryId);
                     return (
                       <motion.button
@@ -861,6 +909,77 @@ export function Library({ allItems, userProgress, setAllItems }: LibraryProps) {
                     );
                   })}
                 </div>
+
+                {totalPages > 1 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className="mt-6 pt-4 border-t border-border"
+                  >
+                    <div className="flex items-center justify-center gap-1">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(1)}
+                        disabled={currentPage === 1}
+                        className="h-9 w-9 p-0"
+                      >
+                        <CaretDoubleLeft size={16} weight="bold" />
+                      </Button>
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                        disabled={currentPage === 1}
+                        className="h-9 w-9 p-0"
+                      >
+                        <CaretLeft size={16} weight="bold" />
+                      </Button>
+                      
+                      <div className="flex items-center gap-1 mx-1">
+                        {getPageNumbers().map((page, idx) => (
+                          page === '...' ? (
+                            <span key={`ellipsis-${idx}`} className="px-2 text-muted-foreground text-sm">
+                              •••
+                            </span>
+                          ) : (
+                            <Button
+                              key={page}
+                              variant={currentPage === page ? 'default' : 'outline'}
+                              size="sm"
+                              onClick={() => setCurrentPage(page as number)}
+                              className="h-9 min-w-9 px-2 font-medium"
+                            >
+                              {page}
+                            </Button>
+                          )
+                        ))}
+                      </div>
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                        disabled={currentPage === totalPages}
+                        className="h-9 w-9 p-0"
+                      >
+                        <CaretRight size={16} weight="bold" />
+                      </Button>
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(totalPages)}
+                        disabled={currentPage === totalPages}
+                        className="h-9 w-9 p-0"
+                      >
+                        <CaretDoubleRight size={16} weight="bold" />
+                      </Button>
+                    </div>
+                  </motion.div>
+                )}
               </>
             )}
           </motion.div>
