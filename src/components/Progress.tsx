@@ -11,6 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { SessionCalendar } from '@/components/SessionCalendar';
 
 interface ProgressProps {
   userProgress: UserProgress;
@@ -141,18 +142,31 @@ export function Progress({ userProgress }: ProgressProps) {
         </Card>
 
         {userProgress.sessions && userProgress.sessions.length > 0 && (
-          <Card>
-            <CardHeader>
-              <div className="flex items-start justify-between gap-4 mb-2">
-                <div className="flex-1">
-                  <CardTitle>Session History</CardTitle>
-                  <CardDescription>
-                    {filteredSessions.length === userProgress.sessions.length
-                      ? 'Tap any session to view details'
-                      : `Showing ${filteredSessions.length} of ${userProgress.sessions.length} sessions`
-                    }
-                  </CardDescription>
-                </div>
+          <>
+            <SessionCalendar 
+              sessions={userProgress.sessions}
+              onDateClick={(date, sessions) => {
+                if (sessions.length === 1) {
+                  setSelectedSession(sessions[0]);
+                } else {
+                  const dateKey = date.toISOString().split('T')[0];
+                  setDateRange({ start: dateKey, end: dateKey });
+                }
+              }}
+            />
+
+            <Card className="mt-6">
+              <CardHeader>
+                <div className="flex items-start justify-between gap-4 mb-2">
+                  <div className="flex-1">
+                    <CardTitle>Session History</CardTitle>
+                    <CardDescription>
+                      {filteredSessions.length === userProgress.sessions.length
+                        ? 'Tap any session to view details'
+                        : `Showing ${filteredSessions.length} of ${userProgress.sessions.length} sessions`
+                      }
+                    </CardDescription>
+                  </div>
                 <Popover open={showFilters} onOpenChange={setShowFilters}>
                   <PopoverTrigger asChild>
                     <Button
@@ -346,6 +360,7 @@ export function Progress({ userProgress }: ProgressProps) {
               )}
             </CardContent>
           </Card>
+          </>
         )}
 
         {userProgress.lastPracticeDate && (
