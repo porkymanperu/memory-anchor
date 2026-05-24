@@ -120,13 +120,19 @@ export function Library({ allItems, userProgress }: LibraryProps) {
               <CardContent className="space-y-6">
                 <div className="space-y-4">
                   {selectedItem.questions && selectedItem.questions.length > 0 && (
-                    <div>
-                      <div className="flex items-center gap-2 mb-3">
-                        <Sparkle size={16} weight="fill" className="text-primary" />
-                        <h3 className="text-sm font-bold text-primary uppercase tracking-wide">
+                    <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent rounded-xl p-5 border-2 border-primary/20">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Sparkle size={20} weight="fill" className="text-primary" />
+                        <h3 className="text-base font-bold text-primary uppercase tracking-wide">
                           Question Variations
                         </h3>
+                        <Badge variant="secondary" className="ml-auto text-xs font-semibold bg-primary/20 text-primary border-primary/30">
+                          {selectedItem.questions.length} variations
+                        </Badge>
                       </div>
+                      <p className="text-xs text-muted-foreground mb-4 leading-relaxed">
+                        During practice, one of these questions will appear randomly to simulate real-world recall scenarios.
+                      </p>
                       <div className="space-y-2">
                         {selectedItem.questions.map((q, index) => (
                           <motion.div
@@ -134,10 +140,10 @@ export function Library({ allItems, userProgress }: LibraryProps) {
                             initial={{ x: -20, opacity: 0 }}
                             animate={{ x: 0, opacity: 1 }}
                             transition={{ delay: 0.1 + index * 0.05 }}
-                            className="bg-gradient-to-r from-primary/10 to-transparent rounded-lg p-3 border-l-2 border-primary"
+                            className="bg-card rounded-lg p-3.5 border-l-4 border-primary shadow-sm"
                           >
-                            <p className="text-sm">
-                              <span className="font-semibold text-primary mr-2">{index + 1}.</span>
+                            <p className="text-sm leading-relaxed">
+                              <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground font-bold text-xs mr-2.5">{index + 1}</span>
                               {q}
                             </p>
                           </motion.div>
@@ -457,6 +463,14 @@ export function Library({ allItems, userProgress }: LibraryProps) {
                             <p className="text-sm text-muted-foreground line-clamp-1">
                               {item.question}
                             </p>
+                            {item.questions && item.questions.length > 1 && (
+                              <div className="flex items-center gap-1.5 mt-2">
+                                <Badge variant="outline" className="text-xs font-medium border-primary/40 text-primary bg-primary/5">
+                                  <Sparkle size={12} weight="fill" className="mr-1" />
+                                  {item.questions.length} question variations
+                                </Badge>
+                              </div>
+                            )}
                           </div>
                           <div className="text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all">
                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
