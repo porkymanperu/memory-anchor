@@ -38,15 +38,24 @@ export function Progress({ userProgress }: ProgressProps) {
       );
     }
 
-    if (dateRange.start) {
-      const startDate = new Date(dateRange.start);
-      filtered = filtered.filter(session => new Date(session.date) >= startDate);
-    }
-
-    if (dateRange.end) {
-      const endDate = new Date(dateRange.end);
-      endDate.setHours(23, 59, 59, 999);
-      filtered = filtered.filter(session => new Date(session.date) <= endDate);
+    if (dateRange.start || dateRange.end) {
+      filtered = filtered.filter(session => {
+        const sessionDateKey = new Date(session.date).toISOString().split('T')[0];
+        
+        if (dateRange.start && dateRange.end) {
+          return sessionDateKey >= dateRange.start && sessionDateKey <= dateRange.end;
+        }
+        
+        if (dateRange.start) {
+          return sessionDateKey >= dateRange.start;
+        }
+        
+        if (dateRange.end) {
+          return sessionDateKey <= dateRange.end;
+        }
+        
+        return true;
+      });
     }
 
     return filtered;
@@ -94,6 +103,7 @@ export function Progress({ userProgress }: ProgressProps) {
                   } else {
                     const dateKey = date.toISOString().split('T')[0];
                     setDateRange({ start: dateKey, end: dateKey });
+                    setShowFilters(false);
                   }
                 }}
               />
