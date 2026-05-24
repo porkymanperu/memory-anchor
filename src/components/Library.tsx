@@ -533,23 +533,25 @@ export function Library({ allItems, userProgress, setAllItems }: LibraryProps) {
                     </p>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="hint1">Hint 1 *</Label>
-                      <Input
+                      <Textarea
                         id="hint1"
                         placeholder="First hint"
                         value={newItemForm.hint1}
                         onChange={(e) => setNewItemForm({ ...newItemForm, hint1: e.target.value })}
+                        rows={3}
                       />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="hint2">Hint 2 *</Label>
-                      <Input
+                      <Textarea
                         id="hint2"
                         placeholder="Second hint"
                         value={newItemForm.hint2}
                         onChange={(e) => setNewItemForm({ ...newItemForm, hint2: e.target.value })}
+                        rows={3}
                       />
                     </div>
                   </div>
