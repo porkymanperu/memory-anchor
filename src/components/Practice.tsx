@@ -232,6 +232,21 @@ export function Practice({
                       </p>
                     </div>
 
+                    {currentItem.answerImageUrl && (
+                      <motion.div 
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 0.2 }}
+                        className="rounded-xl overflow-hidden bg-muted/30 border-2 border-primary/20 shadow-lg"
+                      >
+                        <img
+                          src={currentItem.answerImageUrl}
+                          alt={`Visual aid for ${currentItem.answer}`}
+                          className="w-full h-auto max-h-80 object-contain"
+                        />
+                      </motion.div>
+                    )}
+
                     <div className="bg-secondary/50 rounded-lg p-6 space-y-4">
                       <div>
                         <p className="font-semibold text-sm text-primary uppercase tracking-wide mb-2">

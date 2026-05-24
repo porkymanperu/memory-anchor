@@ -32,6 +32,7 @@ export interface MemoryItem {
   hints: [string, string];
   association: MemoryAssociation;
   imageUrl?: string;
+  answerImageUrl?: string;
   relatedItems?: string[];
   isCustom: boolean;
   difficulty?: 'easy' | 'medium' | 'hard';

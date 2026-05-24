@@ -38,6 +38,7 @@ export function Library({ allItems, userProgress, setAllItems }: LibraryProps) {
     explanation: '',
     imagery: '',
     mnemonic: '',
+    answerImageUrl: '',
     difficulty: 'medium' as 'easy' | 'medium' | 'hard',
   });
 
@@ -69,6 +70,7 @@ export function Library({ allItems, userProgress, setAllItems }: LibraryProps) {
         imagery: newItemForm.imagery.trim(),
         mnemonic: newItemForm.mnemonic.trim() || undefined,
       },
+      answerImageUrl: newItemForm.answerImageUrl.trim() || undefined,
       isCustom: true,
       difficulty: newItemForm.difficulty,
     };
@@ -88,6 +90,7 @@ export function Library({ allItems, userProgress, setAllItems }: LibraryProps) {
       explanation: '',
       imagery: '',
       mnemonic: '',
+      answerImageUrl: '',
       difficulty: 'medium',
     });
   };
@@ -195,6 +198,24 @@ export function Library({ allItems, userProgress, setAllItems }: LibraryProps) {
               </CardHeader>
 
               <CardContent className="space-y-6">
+                {selectedItem.answerImageUrl && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.1 }}
+                    className="rounded-xl overflow-hidden bg-muted/30 border-2 border-primary/20"
+                  >
+                    <img
+                      src={selectedItem.answerImageUrl}
+                      alt={`Visual aid for ${selectedItem.answer}`}
+                      className="w-full h-auto max-h-80 object-contain"
+                    />
+                    <div className="px-4 py-2 bg-primary/5 border-t border-primary/10">
+                      <p className="text-xs text-muted-foreground text-center">Memory Aid Image</p>
+                    </div>
+                  </motion.div>
+                )}
+
                 <div className="space-y-4">
                   {selectedItem.questions && selectedItem.questions.length > 0 && (
                     <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent rounded-xl p-5 border-2 border-primary/20">
@@ -480,6 +501,19 @@ export function Library({ allItems, userProgress, setAllItems }: LibraryProps) {
                           value={newItemForm.mnemonic}
                           onChange={(e) => setNewItemForm({ ...newItemForm, mnemonic: e.target.value })}
                         />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="answerImageUrl">Answer Image URL (optional)</Label>
+                        <Input
+                          id="answerImageUrl"
+                          placeholder="e.g., https://example.com/image.jpg"
+                          value={newItemForm.answerImageUrl}
+                          onChange={(e) => setNewItemForm({ ...newItemForm, answerImageUrl: e.target.value })}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          This image will appear when the answer is revealed to help reinforce memory
+                        </p>
                       </div>
                     </div>
                   </div>
