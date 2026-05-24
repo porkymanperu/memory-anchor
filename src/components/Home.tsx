@@ -2,10 +2,10 @@ import { useState } from 'react';
 import { CategoryId, UserProgress } from '@/lib/types';
 import { categories } from '@/lib/data';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Brain, Fire, Trophy } from '@phosphor-icons/react';
+import { Brain, Play } from '@phosphor-icons/react';
 import { motion } from 'framer-motion';
 
 interface HomeProps {
@@ -46,7 +46,7 @@ export function Home({ onStartPractice, userProgress }: HomeProps) {
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-8"
+          className="text-center mb-12"
         >
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
             <Brain size={32} weight="duotone" className="text-primary" />
@@ -57,57 +57,16 @@ export function Home({ onStartPractice, userProgress }: HomeProps) {
           </p>
         </motion.div>
 
-        <div className="grid gap-4 mb-6">
-          <Card className="border-2">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-accent/20 flex items-center justify-center">
-                    <Fire size={24} weight="fill" className="text-accent" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Current Streak</p>
-                    <p className="text-2xl font-bold">{userProgress.currentStreak} days</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm text-muted-foreground">Best</p>
-                  <p className="text-xl font-semibold text-muted-foreground">{userProgress.longestStreak}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <div className="grid grid-cols-2 gap-4">
-            <Card>
-              <CardContent className="pt-6">
-                <Trophy size={24} className="text-primary mb-2" weight="duotone" />
-                <p className="text-2xl font-bold">{userProgress.totalSessions}</p>
-                <p className="text-sm text-muted-foreground">Sessions</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="pt-6">
-                <div className="text-2xl font-bold mb-2">
-                  {userProgress.totalQuestionsAnswered > 0
-                    ? Math.round((userProgress.totalCorrectAnswers / userProgress.totalQuestionsAnswered) * 100)
-                    : 0}%
-                </div>
-                <p className="text-sm text-muted-foreground">Accuracy</p>
-              </CardContent>
-            </Card>
-          </div>
+        <div className="flex justify-center mb-12">
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setShowCategoryDialog(true)}
+            className="w-32 h-32 rounded-full bg-primary text-primary-foreground shadow-2xl hover:shadow-primary/50 transition-all duration-300 flex items-center justify-center group"
+          >
+            <Play size={48} weight="fill" className="ml-1 group-hover:scale-110 transition-transform" />
+          </motion.button>
         </div>
-
-        <Button
-          size="lg"
-          className="w-full h-14 text-lg font-semibold"
-          onClick={() => setShowCategoryDialog(true)}
-        >
-          <Brain size={24} weight="duotone" className="mr-2" />
-          Start Practice Session
-        </Button>
 
         <Card className="mt-8 bg-secondary/30 border-secondary">
           <CardHeader>
