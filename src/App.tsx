@@ -31,13 +31,48 @@ function App() {
   });
 
   useEffect(() => {
-    if (!migrated && allItems && allItems.length < 100) {
-      const nonCustomIds = new Set(allItems.filter(item => !item.isCustom).map(item => item.id));
-      const missingSampleItems = sampleMemoryItems.filter(item => !nonCustomIds.has(item.id));
+    if (!migrated && allItems) {
+      let updatedItems = [...allItems];
+      let hasChanges = false;
+
+      const seenAnswers = new Map<string, Set<string>>();
+      const duplicateIds = new Set<string>();
       
-      if (missingSampleItems.length > 0) {
-        setAllItems((current) => [...(current || []), ...missingSampleItems]);
+      updatedItems.forEach(item => {
+        const key = item.categoryId.toLowerCase();
+        const answer = item.answer.toLowerCase().trim();
+        
+        if (!seenAnswers.has(key)) {
+          seenAnswers.set(key, new Set());
+        }
+        
+        const categoryAnswers = seenAnswers.get(key)!;
+        if (categoryAnswers.has(answer)) {
+          duplicateIds.add(item.id);
+          hasChanges = true;
+        } else {
+          categoryAnswers.add(answer);
+        }
+      });
+
+      if (duplicateIds.size > 0) {
+        updatedItems = updatedItems.filter(item => !duplicateIds.has(item.id));
       }
+
+      if (updatedItems.length < 100) {
+        const nonCustomIds = new Set(updatedItems.filter(item => !item.isCustom).map(item => item.id));
+        const missingSampleItems = sampleMemoryItems.filter(item => !nonCustomIds.has(item.id));
+        
+        if (missingSampleItems.length > 0) {
+          updatedItems = [...updatedItems, ...missingSampleItems];
+          hasChanges = true;
+        }
+      }
+
+      if (hasChanges) {
+        setAllItems(updatedItems);
+      }
+      
       setMigrated(true);
     }
   }, [migrated, allItems, setAllItems]);

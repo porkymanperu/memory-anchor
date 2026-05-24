@@ -1554,18 +1554,18 @@ export const sampleMemoryItems: MemoryItem[] = [
   {
     id: '92',
     categoryId: 'songs',
-    question: "Which song is about a killing someone?",
-    questions: ["Which Queen song starts with Mama?"],
-    answer: 'Bohemian Rhapsody',
-    hints: ["Same as earlier", "Mama, just killed a man"],
+    question: "Which song is about a sweet escape?",
+    questions: ["Which Gwen Stefani song features Akon?"],
+    answer: 'The Sweet Escape',
+    hints: ["Yoohoo yoohoo", "Pop collaboration"],
     association: {
-      technique: 'Dramatic Opening',
-      explanation: "Mama confession.",
-      imagery: "Freddie singing to mama.",
-      mnemonic: "BOHEMIAN mama"
+      technique: 'Catchphrase',
+      explanation: "Yoohoo hook.",
+      imagery: "Gwen singing yoohoo.",
+      mnemonic: "SWEET yoohoo"
     },
     isCustom: false,
-    difficulty: 'easy'
+    difficulty: 'medium'
   },
   {
     id: '93',
