@@ -1,11 +1,16 @@
-import { useState } from 'react';
-import { UserProgress, PracticeSession } from '@/lib/types';
+import { useState, useMemo } from 'react';
+import { UserProgress, PracticeSession, CategoryId } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Fire, Trophy, Target, TrendUp, Clock, CheckCircle, XCircle, Lightbulb } from '@phosphor-icons/react';
+import { Fire, Trophy, Target, TrendUp, Clock, CheckCircle, XCircle, Lightbulb, Funnel, X } from '@phosphor-icons/react';
 import { formatDate } from '@/lib/helpers';
 import { categories } from '@/lib/data';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 
 interface ProgressProps {
   userProgress: UserProgress;
@@ -13,6 +18,10 @@ interface ProgressProps {
 
 export function Progress({ userProgress }: ProgressProps) {
   const [selectedSession, setSelectedSession] = useState<PracticeSession | null>(null);
+  const [selectedCategories, setSelectedCategories] = useState<CategoryId[]>([]);
+  const [dateRange, setDateRange] = useState<{ start: string; end: string }>({ start: '', end: '' });
+  const [showFilters, setShowFilters] = useState(false);
+
   const accuracy = userProgress.totalQuestionsAnswered > 0
     ? Math.round((userProgress.totalCorrectAnswers / userProgress.totalQuestionsAnswered) * 100)
     : 0;
@@ -20,6 +29,46 @@ export function Progress({ userProgress }: ProgressProps) {
   const getCategoryName = (categoryId: string) => {
     return categories.find(c => c.id === categoryId)?.name || categoryId;
   };
+
+  const filteredSessions = useMemo(() => {
+    if (!userProgress.sessions) return [];
+
+    let filtered = [...userProgress.sessions];
+
+    if (selectedCategories.length > 0) {
+      filtered = filtered.filter(session => 
+        session.categoryIds.some(catId => selectedCategories.includes(catId))
+      );
+    }
+
+    if (dateRange.start) {
+      const startDate = new Date(dateRange.start);
+      filtered = filtered.filter(session => new Date(session.date) >= startDate);
+    }
+
+    if (dateRange.end) {
+      const endDate = new Date(dateRange.end);
+      endDate.setHours(23, 59, 59, 999);
+      filtered = filtered.filter(session => new Date(session.date) <= endDate);
+    }
+
+    return filtered;
+  }, [userProgress.sessions, selectedCategories, dateRange]);
+
+  const toggleCategory = (categoryId: CategoryId) => {
+    setSelectedCategories(prev => 
+      prev.includes(categoryId)
+        ? prev.filter(id => id !== categoryId)
+        : [...prev, categoryId]
+    );
+  };
+
+  const clearFilters = () => {
+    setSelectedCategories([]);
+    setDateRange({ start: '', end: '' });
+  };
+
+  const hasActiveFilters = selectedCategories.length > 0 || dateRange.start || dateRange.end;
 
   return (
     <div className="pb-20 min-h-screen">
@@ -94,66 +143,207 @@ export function Progress({ userProgress }: ProgressProps) {
         {userProgress.sessions && userProgress.sessions.length > 0 && (
           <Card>
             <CardHeader>
-              <CardTitle>Session History</CardTitle>
-              <CardDescription>
-                Tap any session to view details
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {userProgress.sessions.slice(0, 10).map((session) => {
-                const sessionAccuracy = Math.round((session.questionsCorrect / session.questionsAsked) * 100);
-                return (
-                  <button
-                    key={session.id}
-                    onClick={() => setSelectedSession(session)}
-                    className="w-full text-left transition-all hover:scale-[1.02] active:scale-[0.98]"
-                  >
-                    <Card className="border-2 hover:border-primary/40 hover:bg-secondary/30">
-                      <CardContent className="p-4">
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-2">
-                              <p className="text-sm text-muted-foreground">
-                                {formatDate(session.date)}
-                              </p>
-                              <span className="text-xs text-muted-foreground">•</span>
-                              <p className="text-sm text-muted-foreground">
-                                {session.questionsAsked} questions
-                              </p>
-                            </div>
-                            <div className="flex flex-wrap gap-2 mb-2">
-                              {session.categoryIds.map((catId) => (
-                                <Badge key={catId} variant="secondary" className="text-xs">
-                                  {getCategoryName(catId)}
-                                </Badge>
-                              ))}
-                            </div>
-                            <div className="flex items-center gap-4 text-sm">
-                              <div className="flex items-center gap-1">
-                                <CheckCircle size={16} weight="fill" className="text-success" />
-                                <span>{session.questionsCorrect} correct</span>
+              <div className="flex items-start justify-between gap-4 mb-2">
+                <div className="flex-1">
+                  <CardTitle>Session History</CardTitle>
+                  <CardDescription>
+                    {filteredSessions.length === userProgress.sessions.length
+                      ? 'Tap any session to view details'
+                      : `Showing ${filteredSessions.length} of ${userProgress.sessions.length} sessions`
+                    }
+                  </CardDescription>
+                </div>
+                <Popover open={showFilters} onOpenChange={setShowFilters}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant={hasActiveFilters ? "default" : "outline"}
+                      size="sm"
+                      className="gap-2"
+                    >
+                      <Funnel size={16} weight={hasActiveFilters ? "fill" : "regular"} />
+                      Filter
+                      {hasActiveFilters && (
+                        <Badge variant="secondary" className="ml-1 px-1.5 py-0 text-xs">
+                          {selectedCategories.length + (dateRange.start ? 1 : 0) + (dateRange.end ? 1 : 0)}
+                        </Badge>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-80" align="end">
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-semibold text-sm">Filter Sessions</h4>
+                        {hasActiveFilters && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={clearFilters}
+                            className="h-auto p-1 text-xs"
+                          >
+                            Clear all
+                          </Button>
+                        )}
+                      </div>
+
+                      <div className="space-y-3">
+                        <div>
+                          <Label className="text-sm font-medium mb-2 block">Categories</Label>
+                          <div className="max-h-48 overflow-y-auto space-y-2">
+                            {categories.map((category) => (
+                              <div key={category.id} className="flex items-center gap-2">
+                                <Checkbox
+                                  id={`filter-${category.id}`}
+                                  checked={selectedCategories.includes(category.id)}
+                                  onCheckedChange={() => toggleCategory(category.id)}
+                                />
+                                <Label
+                                  htmlFor={`filter-${category.id}`}
+                                  className="text-sm font-normal cursor-pointer flex-1"
+                                >
+                                  {category.name}
+                                </Label>
                               </div>
-                              <div className="flex items-center gap-1">
-                                <Clock size={16} weight="duotone" className="text-muted-foreground" />
-                                <span>{session.averageTime}s avg</span>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="flex-shrink-0 text-right">
-                            <p className={`text-2xl font-bold ${
-                              sessionAccuracy >= 80 ? 'text-success' : 
-                              sessionAccuracy >= 60 ? 'text-accent' : 
-                              'text-muted-foreground'
-                            }`}>
-                              {sessionAccuracy}%
-                            </p>
+                            ))}
                           </div>
                         </div>
-                      </CardContent>
-                    </Card>
-                  </button>
-                );
-              })}
+
+                        <div className="space-y-2 pt-2 border-t">
+                          <Label className="text-sm font-medium">Date Range</Label>
+                          <div className="space-y-2">
+                            <div>
+                              <Label htmlFor="date-start" className="text-xs text-muted-foreground">From</Label>
+                              <Input
+                                id="date-start"
+                                type="date"
+                                value={dateRange.start}
+                                onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
+                                className="mt-1"
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor="date-end" className="text-xs text-muted-foreground">To</Label>
+                              <Input
+                                id="date-end"
+                                type="date"
+                                value={dateRange.end}
+                                onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
+                                className="mt-1"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              {hasActiveFilters && (
+                <div className="flex flex-wrap gap-2">
+                  {selectedCategories.map((catId) => (
+                    <Badge key={catId} variant="secondary" className="gap-1.5">
+                      {getCategoryName(catId)}
+                      <button
+                        onClick={() => toggleCategory(catId)}
+                        className="ml-1 hover:bg-secondary-foreground/20 rounded-full p-0.5"
+                      >
+                        <X size={12} weight="bold" />
+                      </button>
+                    </Badge>
+                  ))}
+                  {dateRange.start && (
+                    <Badge variant="secondary" className="gap-1.5">
+                      From: {new Date(dateRange.start).toLocaleDateString()}
+                      <button
+                        onClick={() => setDateRange(prev => ({ ...prev, start: '' }))}
+                        className="ml-1 hover:bg-secondary-foreground/20 rounded-full p-0.5"
+                      >
+                        <X size={12} weight="bold" />
+                      </button>
+                    </Badge>
+                  )}
+                  {dateRange.end && (
+                    <Badge variant="secondary" className="gap-1.5">
+                      To: {new Date(dateRange.end).toLocaleDateString()}
+                      <button
+                        onClick={() => setDateRange(prev => ({ ...prev, end: '' }))}
+                        className="ml-1 hover:bg-secondary-foreground/20 rounded-full p-0.5"
+                      >
+                        <X size={12} weight="bold" />
+                      </button>
+                    </Badge>
+                  )}
+                </div>
+              )}
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {filteredSessions.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">No sessions match your filters</p>
+                  <Button
+                    variant="link"
+                    onClick={clearFilters}
+                    className="mt-2"
+                  >
+                    Clear filters
+                  </Button>
+                </div>
+              ) : (
+                filteredSessions.slice(0, 10).map((session) => {
+                  const sessionAccuracy = Math.round((session.questionsCorrect / session.questionsAsked) * 100);
+                  return (
+                    <button
+                      key={session.id}
+                      onClick={() => setSelectedSession(session)}
+                      className="w-full text-left transition-all hover:scale-[1.02] active:scale-[0.98]"
+                    >
+                      <Card className="border-2 hover:border-primary/40 hover:bg-secondary/30">
+                        <CardContent className="p-4">
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <p className="text-sm text-muted-foreground">
+                                  {formatDate(session.date)}
+                                </p>
+                                <span className="text-xs text-muted-foreground">•</span>
+                                <p className="text-sm text-muted-foreground">
+                                  {session.questionsAsked} questions
+                                </p>
+                              </div>
+                              <div className="flex flex-wrap gap-2 mb-2">
+                                {session.categoryIds.map((catId) => (
+                                  <Badge key={catId} variant="secondary" className="text-xs">
+                                    {getCategoryName(catId)}
+                                  </Badge>
+                                ))}
+                              </div>
+                              <div className="flex items-center gap-4 text-sm">
+                                <div className="flex items-center gap-1">
+                                  <CheckCircle size={16} weight="fill" className="text-success" />
+                                  <span>{session.questionsCorrect} correct</span>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <Clock size={16} weight="duotone" className="text-muted-foreground" />
+                                  <span>{session.averageTime}s avg</span>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex-shrink-0 text-right">
+                              <p className={`text-2xl font-bold ${
+                                sessionAccuracy >= 80 ? 'text-success' : 
+                                sessionAccuracy >= 60 ? 'text-accent' : 
+                                'text-muted-foreground'
+                              }`}>
+                                {sessionAccuracy}%
+                              </p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </button>
+                  );
+                })
+              )}
             </CardContent>
           </Card>
         )}
