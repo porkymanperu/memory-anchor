@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useKV } from '@github/spark/hooks';
 import { Home } from './components/Home';
 import { Practice } from './components/Practice';
@@ -14,6 +14,7 @@ function App() {
   const [currentView, setCurrentView] = useState<View>('home');
   const [selectedCategories, setSelectedCategories] = useState<CategoryId[]>([]);
   const [selectedDifficulty, setSelectedDifficulty] = useState<'easy' | 'medium' | 'hard' | 'all'>('all');
+  const [migrated, setMigrated] = useState(false);
   
   const [allItems, setAllItems] = useKV<MemoryItem[]>('memory-items', sampleMemoryItems);
   const [userProgress, setUserProgress] = useKV<UserProgress>('user-progress', {
@@ -28,6 +29,18 @@ function App() {
     customItems: [],
     sessions: []
   });
+
+  useEffect(() => {
+    if (!migrated && allItems && allItems.length < 100) {
+      const nonCustomIds = new Set(allItems.filter(item => !item.isCustom).map(item => item.id));
+      const missingSampleItems = sampleMemoryItems.filter(item => !nonCustomIds.has(item.id));
+      
+      if (missingSampleItems.length > 0) {
+        setAllItems((current) => [...(current || []), ...missingSampleItems]);
+      }
+      setMigrated(true);
+    }
+  }, [migrated, allItems, setAllItems]);
 
   const startPractice = (categories: CategoryId[], difficulty: 'easy' | 'medium' | 'hard' | 'all' = 'all') => {
     setSelectedCategories(categories);
