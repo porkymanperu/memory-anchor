@@ -95,7 +95,7 @@ export function Practice({
         ? `Multiple answers: ${currentItem.validAnswers.join(', ')}`
         : currentItem.answer;
       
-      const prompt = (window.spark.llmPrompt as any)`You are a memory expert helping users create memorable associations.
+      const promptText = `You are a memory expert helping users create memorable associations.
 
 Generate a personalized memory association for the following:
 - Question: ${currentItem.displayQuestion}
@@ -116,7 +116,7 @@ Return the result as JSON with this structure:
   "mnemonic": "Optional: A short memorable phrase or acronym if applicable"
 }`;
 
-      const response = await window.spark.llm(prompt, 'gpt-4o', true);
+      const response = await window.spark.llm(promptText, 'gpt-4o', true);
       const association = JSON.parse(response);
       
       setAiAssociation(association);
