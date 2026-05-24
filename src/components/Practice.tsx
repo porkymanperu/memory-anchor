@@ -43,6 +43,7 @@ export function Practice({
     hintsUsed: 0,
     startTime: Date.now()
   });
+  const [rememberedCount, setRememberedCount] = useState<number | null>(null);
 
   useEffect(() => {
     let items = getItemsByCategories(allItems, selectedCategories);
@@ -89,11 +90,15 @@ export function Practice({
     setIsGeneratingAssociation(true);
     
     try {
+      const answerText = currentItem.answerType === 'multiple' && currentItem.validAnswers
+        ? `Multiple answers: ${currentItem.validAnswers.join(', ')}`
+        : currentItem.answer;
+      
       const prompt = (window.spark.llmPrompt as any)`You are a memory expert helping users create memorable associations.
 
 Generate a personalized memory association for the following:
 - Question: ${currentItem.displayQuestion}
-- Answer: ${currentItem.answer}
+- Answer: ${answerText}
 - Category: ${currentItem.categoryId}
 
 Create a memory association that:
@@ -124,7 +129,20 @@ Return the result as JSON with this structure:
   };
 
   const handleMarkCorrect = () => {
-    setSessionStats(prev => ({ ...prev, correct: prev.correct + 1 }));
+    const isMultipleValueAnswer = currentItem.answerType === 'multiple' && currentItem.validAnswers;
+    
+    if (isMultipleValueAnswer) {
+      if (rememberedCount === null) {
+        toast.error('Please select how many answers you remembered');
+        return;
+      }
+      const totalAnswers = currentItem.validAnswers!.length;
+      const partialCorrect = rememberedCount / totalAnswers;
+      setSessionStats(prev => ({ ...prev, correct: prev.correct + partialCorrect }));
+    } else {
+      setSessionStats(prev => ({ ...prev, correct: prev.correct + 1 }));
+    }
+    
     handleNext();
   };
 
@@ -134,6 +152,7 @@ Return the result as JSON with this structure:
       setHintsRevealed(0);
       setAnswerRevealed(false);
       setAiAssociation(null);
+      setRememberedCount(null);
     } else {
       finishSession();
     }
@@ -295,14 +314,76 @@ Return the result as JSON with this structure:
                     animate={{ opacity: 1, y: 0 }}
                     className="mt-8 space-y-6"
                   >
-                    <div className="text-center">
-                      <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
-                        <CheckCircle size={32} weight="duotone" className="text-primary" />
+                    {currentItem.answerType === 'multiple' && currentItem.validAnswers ? (
+                      <div className="space-y-6">
+                        <div className="text-center">
+                          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
+                            <CheckCircle size={32} weight="duotone" className="text-primary" />
+                          </div>
+                          <p className="text-lg font-bold text-primary mb-4">
+                            Valid Answers
+                          </p>
+                        </div>
+
+                        <div className="bg-card rounded-xl p-6 border-2 border-primary/20 space-y-3">
+                          {currentItem.validAnswers.map((answer, index) => (
+                            <motion.div
+                              key={index}
+                              initial={{ x: -20, opacity: 0 }}
+                              animate={{ x: 0, opacity: 1 }}
+                              transition={{ delay: index * 0.1 }}
+                              className="flex items-center gap-3 bg-primary/5 rounded-lg p-3 border border-primary/20"
+                            >
+                              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary text-primary-foreground font-bold text-sm flex-shrink-0">
+                                {index + 1}
+                              </div>
+                              <p className="text-base font-medium text-foreground">
+                                {answer}
+                              </p>
+                            </motion.div>
+                          ))}
+                        </div>
+
+                        <div className="bg-gradient-to-br from-accent/10 to-accent/5 rounded-xl p-5 border-2 border-accent/30">
+                          <p className="text-center text-sm font-semibold text-accent mb-4">
+                            How many did you remember?
+                          </p>
+                          <div className="flex flex-wrap gap-2 justify-center">
+                            {Array.from({ length: currentItem.validAnswers.length + 1 }, (_, i) => i).map((count) => (
+                              <Button
+                                key={count}
+                                variant={rememberedCount === count ? 'default' : 'outline'}
+                                size="lg"
+                                onClick={() => setRememberedCount(count)}
+                                className={`min-w-14 h-14 text-lg font-bold ${
+                                  rememberedCount === count ? 'ring-2 ring-accent ring-offset-2' : ''
+                                }`}
+                              >
+                                {count}
+                              </Button>
+                            ))}
+                          </div>
+                          {rememberedCount !== null && (
+                            <motion.p
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              className="text-center text-sm text-muted-foreground mt-4"
+                            >
+                              Score: {Math.round((rememberedCount / currentItem.validAnswers.length) * 100)}%
+                            </motion.p>
+                          )}
+                        </div>
                       </div>
-                      <p className="text-3xl font-bold text-primary mb-2">
-                        {currentItem.answer}
-                      </p>
-                    </div>
+                    ) : (
+                      <div className="text-center">
+                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
+                          <CheckCircle size={32} weight="duotone" className="text-primary" />
+                        </div>
+                        <p className="text-3xl font-bold text-primary mb-2">
+                          {currentItem.answer}
+                        </p>
+                      </div>
+                    )}
 
                     {currentItem.answerImageUrl && (
                       <motion.div 
@@ -313,7 +394,7 @@ Return the result as JSON with this structure:
                       >
                         <img
                           src={currentItem.answerImageUrl}
-                          alt={`Visual aid for ${currentItem.answer}`}
+                          alt={`Visual aid for ${currentItem.answer || 'answers'}`}
                           className="w-full h-auto max-h-80 object-contain"
                         />
                       </motion.div>
@@ -386,7 +467,7 @@ Return the result as JSON with this structure:
                         onClick={handleMarkCorrect}
                         className="flex-1"
                       >
-                        I Got It Right
+                        {currentItem.answerType === 'multiple' ? 'Continue' : 'I Got It Right'}
                         <ArrowRight size={20} weight="bold" className="ml-2" />
                       </Button>
                     </div>

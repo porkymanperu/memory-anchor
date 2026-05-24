@@ -29,6 +29,8 @@ export interface MemoryItem {
   question: string;
   questions?: string[];
   answer: string;
+  answerType?: 'single' | 'multiple';
+  validAnswers?: string[];
   hints: [string, string];
   association?: MemoryAssociation;
   imageUrl?: string;

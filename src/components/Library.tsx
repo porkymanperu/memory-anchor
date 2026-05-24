@@ -36,7 +36,9 @@ export function Library({ allItems, userProgress, setAllItems }: LibraryProps) {
   
   const [newItemForm, setNewItemForm] = useState({
     categoryId: 'actors' as CategoryId,
+    answerType: 'single' as 'single' | 'multiple',
     answer: '',
+    validAnswers: [''],
     questions: [''],
     hint1: '',
     hint2: '',
@@ -138,11 +140,6 @@ If the answer is nonsensical, gibberish, inappropriate, or cannot be understood,
   };
 
   const handleAddItem = () => {
-    if (!newItemForm.answer.trim()) {
-      toast.error('Please fill in the answer field');
-      return;
-    }
-
     const validQuestions = newItemForm.questions.filter(q => q.trim() !== '');
     if (validQuestions.length === 0) {
       toast.error('Please provide at least one question');
@@ -154,12 +151,29 @@ If the answer is nonsensical, gibberish, inappropriate, or cannot be understood,
       return;
     }
 
+    if (newItemForm.answerType === 'single') {
+      if (!newItemForm.answer.trim()) {
+        toast.error('Please fill in the answer field');
+        return;
+      }
+    } else {
+      const validAnswers = newItemForm.validAnswers.filter(a => a.trim() !== '');
+      if (validAnswers.length === 0) {
+        toast.error('Please provide at least one valid answer');
+        return;
+      }
+    }
+
     const trimmedQuestions = validQuestions.map(q => q.trim());
     
     const newItem: MemoryItem = {
       id: `custom-${Date.now()}`,
       categoryId: newItemForm.categoryId,
-      answer: newItemForm.answer.trim(),
+      answerType: newItemForm.answerType,
+      answer: newItemForm.answerType === 'single' ? newItemForm.answer.trim() : '',
+      validAnswers: newItemForm.answerType === 'multiple' 
+        ? newItemForm.validAnswers.filter(a => a.trim() !== '').map(a => a.trim())
+        : undefined,
       question: trimmedQuestions[0],
       questions: trimmedQuestions.length > 1 ? trimmedQuestions : undefined,
       hints: [newItemForm.hint1.trim(), newItemForm.hint2.trim()],
@@ -175,7 +189,9 @@ If the answer is nonsensical, gibberish, inappropriate, or cannot be understood,
     
     setNewItemForm({
       categoryId: 'actors',
+      answerType: 'single',
       answer: '',
+      validAnswers: [''],
       questions: [''],
       hint1: '',
       hint2: '',
@@ -313,10 +329,32 @@ If the answer is nonsensical, gibberish, inappropriate, or cannot be understood,
                     >
                       {getCategoryName(selectedItem.categoryId)}
                     </Badge>
-                    <CardTitle className="text-3xl mb-3 leading-tight">{selectedItem.answer}</CardTitle>
-                    <CardDescription className="text-base leading-relaxed">
-                      {selectedItem.question}
-                    </CardDescription>
+                    {selectedItem.answerType === 'multiple' && selectedItem.validAnswers ? (
+                      <>
+                        <CardTitle className="text-3xl mb-3 leading-tight">
+                          <Badge variant="outline" className="mb-2">Multiple-Value Answer</Badge>
+                        </CardTitle>
+                        <CardDescription className="text-base leading-relaxed mb-4">
+                          {selectedItem.question}
+                        </CardDescription>
+                        <div className="space-y-2">
+                          <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Valid Answers:</p>
+                          {selectedItem.validAnswers.map((answer, index) => (
+                            <div key={index} className="flex items-center gap-2 text-lg">
+                              <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground font-bold text-xs flex-shrink-0">{index + 1}</span>
+                              <span className="font-semibold">{answer}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <CardTitle className="text-3xl mb-3 leading-tight">{selectedItem.answer}</CardTitle>
+                        <CardDescription className="text-base leading-relaxed">
+                          {selectedItem.question}
+                        </CardDescription>
+                      </>
+                    )}
                   </div>
                   {userProgress.favoriteItems?.includes(selectedItem.id) && (
                     <motion.div
@@ -531,14 +569,88 @@ If the answer is nonsensical, gibberish, inappropriate, or cannot be understood,
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="answer">Answer (What you're trying to remember) *</Label>
-                    <Input
-                      id="answer"
-                      placeholder="e.g., Leonardo DiCaprio"
-                      value={newItemForm.answer}
-                      onChange={(e) => setNewItemForm({ ...newItemForm, answer: e.target.value })}
-                    />
+                    <Label htmlFor="answerType">Answer Type</Label>
+                    <Select
+                      value={newItemForm.answerType}
+                      onValueChange={(value) => setNewItemForm({ ...newItemForm, answerType: value as 'single' | 'multiple' })}
+                    >
+                      <SelectTrigger id="answerType">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="single">Single Answer</SelectItem>
+                        <SelectItem value="multiple">Multiple-Value Answer</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">
+                      {newItemForm.answerType === 'single' 
+                        ? 'For questions with one specific answer (e.g., "Who is the lead singer of Foo Fighters?")'
+                        : 'For questions requiring multiple answers (e.g., "Tell me 5 songs by Foo Fighters")'}
+                    </p>
                   </div>
+
+                  {newItemForm.answerType === 'single' ? (
+                    <div className="space-y-2">
+                      <Label htmlFor="answer">Answer (What you're trying to remember) *</Label>
+                      <Input
+                        id="answer"
+                        placeholder="e.g., Leonardo DiCaprio"
+                        value={newItemForm.answer}
+                        onChange={(e) => setNewItemForm({ ...newItemForm, answer: e.target.value })}
+                      />
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <Label>Valid Answers * (All acceptable answers)</Label>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setNewItemForm({ ...newItemForm, validAnswers: [...newItemForm.validAnswers, ''] })}
+                          className="gap-1 h-7 text-xs"
+                        >
+                          <Plus size={14} weight="bold" />
+                          Add Answer
+                        </Button>
+                      </div>
+                      <div className="space-y-2">
+                        {newItemForm.validAnswers.map((answer, index) => (
+                          <div key={index} className="flex gap-2">
+                            <div className="flex-1">
+                              <Input
+                                id={`answer-${index}`}
+                                placeholder={`Answer ${index + 1}: e.g., Everlong`}
+                                value={answer}
+                                onChange={(e) => {
+                                  const newAnswers = [...newItemForm.validAnswers];
+                                  newAnswers[index] = e.target.value;
+                                  setNewItemForm({ ...newItemForm, validAnswers: newAnswers });
+                                }}
+                              />
+                            </div>
+                            {newItemForm.validAnswers.length > 1 && (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  const newAnswers = newItemForm.validAnswers.filter((_, i) => i !== index);
+                                  setNewItemForm({ ...newItemForm, validAnswers: newAnswers });
+                                }}
+                                className="flex-shrink-0 h-auto px-2 text-muted-foreground hover:text-destructive"
+                              >
+                                <X size={18} />
+                              </Button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Add all valid answers. During practice, users will self-assess how many they remembered.
+                      </p>
+                    </div>
+                  )}
 
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
