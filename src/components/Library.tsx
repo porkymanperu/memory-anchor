@@ -223,11 +223,13 @@ If the answer is nonsensical, gibberish, inappropriate, or cannot be understood,
         item.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (item.questions && item.questions.some(q => q.toLowerCase().includes(searchQuery.toLowerCase())));
       const matchesCategory = selectedCategory === 'all' || item.categoryId === selectedCategory;
-      return matchesSearch && matchesCategory;
+      const itemCategory = categories.find(c => c.id === item.categoryId);
+      const matchesGroup = selectedGroup === 'all' || itemCategory?.group === selectedGroup;
+      return matchesSearch && matchesCategory && matchesGroup;
     });
     setCurrentPage(1);
     return items;
-  }, [allItems, searchQuery, selectedCategory]);
+  }, [allItems, searchQuery, selectedCategory, selectedGroup]);
 
   const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
   const paginatedItems = useMemo(() => {
