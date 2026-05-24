@@ -102,7 +102,9 @@ export const sampleMemoryItems: MemoryItem[] = [
     questions: [
       "What's the name of the guitarist from Pearl Jam whose name sounds like a physical object?",
       "Who is the rhythm guitarist and co-founder of Pearl Jam?",
-      "Which Pearl Jam member has a first name that's a type of rock?"
+      "Which Pearl Jam member has a first name that's a type of rock?",
+      "Who played guitar on Pearl Jam's album 'Ten'?",
+      "What's the name of the Pearl Jam guitarist who also co-founded Mother Love Bone?"
     ],
     answer: 'Stone Gossard',
     hints: [
@@ -125,7 +127,9 @@ export const sampleMemoryItems: MemoryItem[] = [
     questions: [
       "What's the movie where Leonardo DiCaprio goes inside people's dreams to plant ideas?",
       "What's the Christopher Nolan film about dream manipulation and shared dreaming?",
-      "Which movie features a team extracting secrets from people's subconscious while they sleep?"
+      "Which movie features a team extracting secrets from people's subconscious while they sleep?",
+      "What's the 2010 sci-fi thriller about dream heists directed by Christopher Nolan?",
+      "Which movie has Leonardo DiCaprio as a thief who steals secrets through dream technology?"
     ],
     answer: 'Inception',
     hints: [
@@ -148,7 +152,9 @@ export const sampleMemoryItems: MemoryItem[] = [
     questions: [
       "What's the name of the band with vegetables that are red, hot, and spicy?",
       "Which rock band is named after a type of hot pepper?",
-      "Who are the musicians famous for 'Californication' and 'Under the Bridge'?"
+      "Who are the musicians famous for 'Californication' and 'Under the Bridge'?",
+      "What funk rock band did Flea and Anthony Kiedis form in Los Angeles?",
+      "Which band is known for combining funk, punk, and rock with spicy vegetable imagery?"
     ],
     answer: 'Red Hot Chili Peppers',
     hints: [
@@ -171,7 +177,9 @@ export const sampleMemoryItems: MemoryItem[] = [
     questions: [
       "What's the famous Nirvana album with a baby swimming underwater on the cover?",
       "Which Nirvana album features a baby reaching for a dollar bill underwater?",
-      "What's the second studio album by Nirvana released in 1991?"
+      "What's the second studio album by Nirvana released in 1991?",
+      "What album contains 'Smells Like Teen Spirit' and has an underwater baby photo?",
+      "Which grunge album from 1991 became one of the best-selling albums of all time?"
     ],
     answer: 'Nevermind',
     hints: [
@@ -194,7 +202,9 @@ export const sampleMemoryItems: MemoryItem[] = [
     questions: [
       "Who's the British actor known for playing both a wizard headmaster and a mutant mentor?",
       "Who played Gandalf in Lord of the Rings and Magneto in X-Men?",
-      "Which legendary British actor portrayed both a wizard and a master of magnetism?"
+      "Which legendary British actor portrayed both a wizard and a master of magnetism?",
+      "Who is the actor famous for his roles in both Middle-earth and the X-Men universe?",
+      "Which British knight played the Grey Wizard in Peter Jackson's trilogy?"
     ],
     answer: 'Ian McKellen',
     hints: [
@@ -217,7 +227,9 @@ export const sampleMemoryItems: MemoryItem[] = [
     questions: [
       "What's the city in Japan famous for thousands of red torii gates on a mountain?",
       "Which former imperial capital of Japan is known for Fushimi Inari Shrine?",
-      "What Japanese city has over 2,000 temples and shrines?"
+      "What Japanese city has over 2,000 temples and shrines?",
+      "Where can you walk through thousands of red gates up a sacred mountain?",
+      "What ancient Japanese capital is famous for its traditional wooden houses and geisha district?"
     ],
     answer: 'Kyoto',
     hints: [
@@ -240,7 +252,9 @@ export const sampleMemoryItems: MemoryItem[] = [
     questions: [
       "What's the Italian luxury brand with a prancing horse logo?",
       "Which supercar manufacturer was founded by Enzo in Maranello?",
-      "What sports car brand is synonymous with Formula 1 racing?"
+      "What sports car brand is synonymous with Formula 1 racing?",
+      "What's the iconic Italian car brand with a yellow background and black horse?",
+      "Which luxury automaker is famous for the Testarossa and F40?"
     ],
     answer: 'Ferrari',
     hints: [
@@ -263,7 +277,9 @@ export const sampleMemoryItems: MemoryItem[] = [
     questions: [
       "What's the Spielberg movie about a friendly alien who wants to phone home?",
       "Which 1982 film features a young boy befriending an extraterrestrial?",
-      "What movie is famous for the bicycle flying across the moon scene?"
+      "What movie is famous for the bicycle flying across the moon scene?",
+      "Which Steven Spielberg classic features an alien stranded on Earth?",
+      "What film has the iconic glowing finger touching scene?"
     ],
     answer: 'E.T. the Extra-Terrestrial',
     hints: [
@@ -286,7 +302,9 @@ export const sampleMemoryItems: MemoryItem[] = [
     questions: [
       "What's the Queen song with Galileo's name repeated in the opera section?",
       "Which Queen track is known for its mix of ballad, opera, and hard rock?",
-      "What's Freddie Mercury's most famous six-minute epic?"
+      "What's Freddie Mercury's most famous six-minute epic?",
+      "Which Queen song starts with 'Is this the real life? Is this just fantasy?'",
+      "What rock opera masterpiece includes 'Scaramouche, will you do the Fandango?'"
     ],
     answer: 'Bohemian Rhapsody',
     hints: [
@@ -309,7 +327,9 @@ export const sampleMemoryItems: MemoryItem[] = [
     questions: [
       "What's the Swiss luxury watch brand with a crown logo?",
       "Which timepiece brand is most associated with luxury and prestige?",
-      "What watch manufacturer has been worn by James Bond?"
+      "What watch manufacturer has been worn by James Bond?",
+      "Which Swiss watch brand is known for the Submariner and Daytona models?",
+      "What's the most recognized luxury watch brand in the world?"
     ],
     answer: 'Rolex',
     hints: [
@@ -332,7 +352,9 @@ export const sampleMemoryItems: MemoryItem[] = [
     questions: [
       "Who's the actor famous for playing a boxer named Rocky and an action hero named Rambo?",
       "Which action star wrote and starred in the Rocky film series?",
-      "Who played the Philadelphia boxer who fought Apollo Creed?"
+      "Who played the Philadelphia boxer who fought Apollo Creed?",
+      "What actor is known for roles that both start with 'R' - a boxer and a Vietnam vet?",
+      "Who starred in both 'First Blood' and the Rocky franchise?"
     ],
     answer: 'Sylvester Stallone',
     hints: [
@@ -355,7 +377,9 @@ export const sampleMemoryItems: MemoryItem[] = [
     questions: [
       "What's the name of the famous sushi restaurant in Ginza that has three Michelin stars?",
       "Which Tokyo sushi restaurant was featured in 'Jiro Dreams of Sushi'?",
-      "What's the name of master chef Jiro Ono's restaurant?"
+      "What's the name of master chef Jiro Ono's restaurant?",
+      "Where is the tiny 10-seat sushi restaurant that requires months of reservation?",
+      "What legendary Tokyo restaurant is run by an 90-year-old sushi master?"
     ],
     answer: 'Sukiyabashi Jiro',
     hints: [
