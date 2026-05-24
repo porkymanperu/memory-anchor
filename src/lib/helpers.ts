@@ -1,4 +1,25 @@
 import { MemoryItem, CategoryId, PracticeSession, UserProgress } from './types';
+import { User, FilmReel, MusicNotes, Microphone, Disc, Buildings, ForkKnife, Signpost, TShirt, Sneaker, Watch, Drop, Diamond } from '@phosphor-icons/react';
+
+const iconMap = {
+  'user': User,
+  'film': FilmReel,
+  'music-notes': MusicNotes,
+  'microphone': Microphone,
+  'disc': Disc,
+  'buildings': Buildings,
+  'fork-knife': ForkKnife,
+  'signpost': Signpost,
+  't-shirt': TShirt,
+  'sneaker': Sneaker,
+  'watch': Watch,
+  'drop': Drop,
+  'diamond': Diamond,
+};
+
+export function getCategoryIcon(iconName: string) {
+  return iconMap[iconName as keyof typeof iconMap] || User;
+}
 
 export function shuffleArray<T>(array: T[]): T[] {
   const newArray = [...array];

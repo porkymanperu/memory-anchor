@@ -4,10 +4,11 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MagnifyingGlass, Star, X, ArrowLeft, Sparkle, FilmStrip, MusicNote, MapPin, ShoppingBag } from '@phosphor-icons/react';
+import { MagnifyingGlass, Star, X, ArrowLeft, Sparkle, FilmStrip, MusicNote, MapPin, ShoppingBag, User, FilmReel, MusicNotes, Microphone, Disc, Buildings, ForkKnife, Signpost, TShirt, Sneaker, Watch, Drop, Diamond } from '@phosphor-icons/react';
 import { categories } from '@/lib/data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { motion, AnimatePresence } from 'framer-motion';
+import { getCategoryIcon } from '@/lib/helpers';
 
 interface LibraryProps {
   allItems: MemoryItem[];
@@ -35,6 +36,12 @@ export function Library({ allItems, userProgress }: LibraryProps) {
 
   const getCategoryColor = (categoryId: string) => {
     return categories.find(c => c.id === categoryId)?.color || 'oklch(0.5 0.1 200)';
+  };
+
+  const getCategoryIconComponent = (categoryId: string) => {
+    const category = categories.find(c => c.id === categoryId);
+    if (!category) return User;
+    return getCategoryIcon(category.icon);
   };
 
   const itemsByCategory = categories.map(cat => ({
@@ -362,22 +369,27 @@ export function Library({ allItems, userProgress }: LibraryProps) {
                   </Badge>
                 </div>
               </SelectItem>
-              {filteredCategories.map(cat => (
-                <SelectItem key={cat.id} value={cat.id}>
-                  <div className="flex items-center justify-between w-full gap-3">
-                    <div className="flex items-center gap-2">
-                      <div 
-                        className="w-3 h-3 rounded-full flex-shrink-0" 
-                        style={{ backgroundColor: cat.color }}
-                      />
-                      <span className="font-medium">{cat.name}</span>
+              {filteredCategories.map(cat => {
+                const CategoryIcon = getCategoryIcon(cat.icon);
+                return (
+                  <SelectItem key={cat.id} value={cat.id}>
+                    <div className="flex items-center justify-between w-full gap-3">
+                      <div className="flex items-center gap-2">
+                        <CategoryIcon 
+                          size={16} 
+                          weight="duotone"
+                          className="flex-shrink-0" 
+                          style={{ color: cat.color }}
+                        />
+                        <span className="font-medium">{cat.name}</span>
+                      </div>
+                      <Badge variant="secondary" className="text-xs">
+                        {cat.count}
+                      </Badge>
                     </div>
-                    <Badge variant="secondary" className="text-xs">
-                      {cat.count}
-                    </Badge>
-                  </div>
-                </SelectItem>
-              ))}
+                  </SelectItem>
+                );
+              })}
             </SelectContent>
           </Select>
         </motion.div>
@@ -407,41 +419,46 @@ export function Library({ allItems, userProgress }: LibraryProps) {
                   </p>
                 </div>
                 <div className="grid gap-2">
-                  {filteredItems.map((item, index) => (
-                    <motion.button
-                      key={item.id}
-                      onClick={() => setSelectedItem(item)}
-                      className="w-full text-left group"
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.02 }}
-                      whileHover={{ scale: 1.005 }}
-                      whileTap={{ scale: 0.995 }}
-                    >
-                      <div className="flex items-center gap-3 px-4 py-2.5 bg-card border border-border rounded-lg hover:border-primary/50 hover:bg-accent/5 transition-all">
-                        <div 
-                          className="w-1 h-8 rounded-full flex-shrink-0"
-                          style={{ backgroundColor: getCategoryColor(item.categoryId) }}
-                        />
-                        <div className="flex-1 min-w-0 flex items-center gap-2">
-                          <span className="font-medium text-sm truncate group-hover:text-primary transition-colors">
-                            {item.answer}
-                          </span>
-                          {userProgress.favoriteItems?.includes(item.id) && (
-                            <Star size={14} weight="fill" className="text-accent flex-shrink-0" />
-                          )}
-                          {item.questions && item.questions.length > 1 && (
-                            <span className="text-xs text-muted-foreground flex-shrink-0">
-                              ({item.questions.length})
+                  {filteredItems.map((item, index) => {
+                    const ItemIcon = getCategoryIconComponent(item.categoryId);
+                    return (
+                      <motion.button
+                        key={item.id}
+                        onClick={() => setSelectedItem(item)}
+                        className="w-full text-left group"
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.02 }}
+                        whileHover={{ scale: 1.005 }}
+                        whileTap={{ scale: 0.995 }}
+                      >
+                        <div className="flex items-center gap-3 px-4 py-2.5 bg-card border border-border rounded-lg hover:border-primary/50 hover:bg-accent/5 transition-all">
+                          <ItemIcon 
+                            size={20} 
+                            weight="duotone"
+                            className="flex-shrink-0 text-muted-foreground group-hover:text-primary transition-colors"
+                            style={{ color: getCategoryColor(item.categoryId) }}
+                          />
+                          <div className="flex-1 min-w-0 flex items-center gap-2">
+                            <span className="font-medium text-sm truncate group-hover:text-primary transition-colors">
+                              {item.answer}
                             </span>
-                          )}
+                            {userProgress.favoriteItems?.includes(item.id) && (
+                              <Star size={14} weight="fill" className="text-accent flex-shrink-0" />
+                            )}
+                            {item.questions && item.questions.length > 1 && (
+                              <span className="text-xs text-muted-foreground flex-shrink-0">
+                                ({item.questions.length})
+                              </span>
+                            )}
+                          </div>
+                          <svg className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
                         </div>
-                        <svg className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
-                      </div>
-                    </motion.button>
-                  ))}
+                      </motion.button>
+                    );
+                  })}
                 </div>
               </>
             )}
