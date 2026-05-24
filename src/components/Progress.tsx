@@ -2,7 +2,8 @@ import { useState, useMemo } from 'react';
 import { UserProgress, PracticeSession, CategoryId } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Clock, CheckCircle, XCircle, Lightbulb, Funnel, X, Calendar, Target } from '@phosphor-icons/react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Clock, CheckCircle, XCircle, Lightbulb, Funnel, X, Calendar, Target, Trash } from '@phosphor-icons/react';
 import { formatDate } from '@/lib/helpers';
 import { categories } from '@/lib/data';
 import { Badge } from '@/components/ui/badge';
@@ -13,17 +14,22 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { SessionCalendar } from '@/components/SessionCalendar';
 import { isToday, parseISO, format } from 'date-fns';
+import { toast } from 'sonner';
 
 interface ProgressProps {
   userProgress: UserProgress;
+  setUserProgress: (updater: (prev: UserProgress) => UserProgress) => void;
 }
 
-export function Progress({ userProgress }: ProgressProps) {
+export function Progress({ userProgress, setUserProgress }: ProgressProps) {
   const [selectedSession, setSelectedSession] = useState<PracticeSession | null>(null);
   const [selectedCategories, setSelectedCategories] = useState<CategoryId[]>([]);
   const [dateRange, setDateRange] = useState<{ start: string; end: string }>({ start: '', end: '' });
   const [showFilters, setShowFilters] = useState(false);
   const [questionFilter, setQuestionFilter] = useState<'all' | 'correct' | 'incorrect'>('all');
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showClearAllDialog, setShowClearAllDialog] = useState(false);
+  const [sessionToDelete, setSessionToDelete] = useState<string | null>(null);
 
   const getCategoryName = (categoryId: string) => {
     return categories.find(c => c.id === categoryId)?.name || categoryId;
@@ -77,6 +83,63 @@ export function Progress({ userProgress }: ProgressProps) {
   };
 
   const hasActiveFilters = selectedCategories.length > 0 || dateRange.start || dateRange.end;
+
+  const handleDeleteSession = (sessionId: string) => {
+    setSessionToDelete(sessionId);
+    setShowDeleteDialog(true);
+  };
+
+  const confirmDeleteSession = () => {
+    if (!sessionToDelete) return;
+
+    setUserProgress((prev) => {
+      const updatedSessions = prev.sessions.filter(s => s.id !== sessionToDelete);
+      const deletedSession = prev.sessions.find(s => s.id === sessionToDelete);
+
+      if (!deletedSession) return prev;
+
+      const newTotalSessions = Math.max(0, prev.totalSessions - 1);
+      const newTotalQuestionsAnswered = Math.max(0, prev.totalQuestionsAnswered - deletedSession.questionsAsked);
+      const newTotalCorrectAnswers = Math.max(0, prev.totalCorrectAnswers - deletedSession.questionsCorrect);
+
+      return {
+        ...prev,
+        sessions: updatedSessions,
+        totalSessions: newTotalSessions,
+        totalQuestionsAnswered: newTotalQuestionsAnswered,
+        totalCorrectAnswers: newTotalCorrectAnswers,
+      };
+    });
+
+    if (selectedSession?.id === sessionToDelete) {
+      setSelectedSession(null);
+    }
+
+    setShowDeleteDialog(false);
+    setSessionToDelete(null);
+    toast.success('Session deleted successfully');
+  };
+
+  const handleClearAllHistory = () => {
+    setShowClearAllDialog(true);
+  };
+
+  const confirmClearAllHistory = () => {
+    setUserProgress((prev) => ({
+      ...prev,
+      sessions: [],
+      totalSessions: 0,
+      totalQuestionsAnswered: 0,
+      totalCorrectAnswers: 0,
+      currentStreak: 0,
+      lastPracticeDate: '',
+    }));
+
+    setSelectedSession(null);
+    setShowClearAllDialog(false);
+    clearFilters();
+    toast.success('All session history cleared');
+  };
 
   const hasCompletedToday = userProgress.sessions.some((session) => {
     try {
@@ -217,6 +280,16 @@ export function Progress({ userProgress }: ProgressProps) {
                       }
                     </CardDescription>
                   </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleClearAllHistory}
+                      className="gap-2 text-destructive hover:text-destructive"
+                    >
+                      <Trash size={16} />
+                      Clear All
+                    </Button>
                 <Popover open={showFilters} onOpenChange={setShowFilters}>
                   <PopoverTrigger asChild>
                     <Button
@@ -300,6 +373,7 @@ export function Progress({ userProgress }: ProgressProps) {
                     </div>
                   </PopoverContent>
                 </Popover>
+                  </div>
               </div>
 
               {hasActiveFilters && (
@@ -356,55 +430,70 @@ export function Progress({ userProgress }: ProgressProps) {
                 filteredSessions.slice(0, 10).map((session) => {
                   const sessionAccuracy = Math.round((session.questionsCorrect / session.questionsAsked) * 100);
                   return (
-                    <button
+                    <div
                       key={session.id}
-                      onClick={() => setSelectedSession(session)}
-                      className="w-full text-left transition-all hover:scale-[1.02] active:scale-[0.98]"
+                      className="relative group"
                     >
-                      <Card className="border-2 hover:border-primary/40 hover:bg-secondary/30">
-                        <CardContent className="p-4">
-                          <div className="flex items-start justify-between gap-4">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-2">
-                                <p className="text-sm text-muted-foreground">
-                                  {formatDate(session.date)}
-                                </p>
-                                <span className="text-xs text-muted-foreground">•</span>
-                                <p className="text-sm text-muted-foreground">
-                                  {session.questionsAsked} questions
-                                </p>
-                              </div>
-                              <div className="flex flex-wrap gap-2 mb-2">
-                                {session.categoryIds.map((catId) => (
-                                  <Badge key={catId} variant="secondary" className="text-xs">
-                                    {getCategoryName(catId)}
-                                  </Badge>
-                                ))}
-                              </div>
-                              <div className="flex items-center gap-4 text-sm">
-                                <div className="flex items-center gap-1">
-                                  <CheckCircle size={16} weight="fill" className="text-success" />
-                                  <span>{session.questionsCorrect} correct</span>
+                      <button
+                        onClick={() => setSelectedSession(session)}
+                        className="w-full text-left transition-all hover:scale-[1.02] active:scale-[0.98]"
+                      >
+                        <Card className="border-2 hover:border-primary/40 hover:bg-secondary/30">
+                          <CardContent className="p-4">
+                            <div className="flex items-start justify-between gap-4">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <p className="text-sm text-muted-foreground">
+                                    {formatDate(session.date)}
+                                  </p>
+                                  <span className="text-xs text-muted-foreground">•</span>
+                                  <p className="text-sm text-muted-foreground">
+                                    {session.questionsAsked} questions
+                                  </p>
                                 </div>
-                                <div className="flex items-center gap-1">
-                                  <Clock size={16} weight="duotone" className="text-muted-foreground" />
-                                  <span>{session.averageTime}s avg</span>
+                                <div className="flex flex-wrap gap-2 mb-2">
+                                  {session.categoryIds.map((catId) => (
+                                    <Badge key={catId} variant="secondary" className="text-xs">
+                                      {getCategoryName(catId)}
+                                    </Badge>
+                                  ))}
                                 </div>
+                                <div className="flex items-center gap-4 text-sm">
+                                  <div className="flex items-center gap-1">
+                                    <CheckCircle size={16} weight="fill" className="text-success" />
+                                    <span>{session.questionsCorrect} correct</span>
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    <Clock size={16} weight="duotone" className="text-muted-foreground" />
+                                    <span>{session.averageTime}s avg</span>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="flex-shrink-0 text-right">
+                                <p className={`text-2xl font-bold ${
+                                  sessionAccuracy >= 80 ? 'text-success' : 
+                                  sessionAccuracy >= 60 ? 'text-accent' : 
+                                  'text-muted-foreground'
+                                }`}>
+                                  {sessionAccuracy}%
+                                </p>
                               </div>
                             </div>
-                            <div className="flex-shrink-0 text-right">
-                              <p className={`text-2xl font-bold ${
-                                sessionAccuracy >= 80 ? 'text-success' : 
-                                sessionAccuracy >= 60 ? 'text-accent' : 
-                                'text-muted-foreground'
-                              }`}>
-                                {sessionAccuracy}%
-                              </p>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </button>
+                          </CardContent>
+                        </Card>
+                      </button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteSession(session.id);
+                        }}
+                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-background hover:bg-destructive hover:text-destructive-foreground shadow-md"
+                      >
+                        <Trash size={16} />
+                      </Button>
+                    </div>
                   );
                 })
               )}
@@ -441,10 +530,24 @@ export function Progress({ userProgress }: ProgressProps) {
             return (
               <>
                 <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 flex-shrink-0 border-b">
-                  <DialogTitle className="text-lg sm:text-xl">Session Details</DialogTitle>
-                  <DialogDescription className="text-sm">
-                    {formatDate(selectedSession.date)}
-                  </DialogDescription>
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1">
+                      <DialogTitle className="text-lg sm:text-xl">Session Details</DialogTitle>
+                      <DialogDescription className="text-sm">
+                        {formatDate(selectedSession.date)}
+                      </DialogDescription>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        handleDeleteSession(selectedSession.id);
+                      }}
+                      className="hover:bg-destructive hover:text-destructive-foreground"
+                    >
+                      <Trash size={18} />
+                    </Button>
+                  </div>
                 </DialogHeader>
                 
                 <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4">

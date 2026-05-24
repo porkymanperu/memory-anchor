@@ -131,6 +131,7 @@ function App() {
       {currentView === 'progress' && userProgress && (
         <Progress 
           userProgress={userProgress}
+          setUserProgress={setUserProgress as any}
         />
       )}
 
