@@ -81,11 +81,21 @@ export function Library({ allItems, userProgress, setAllItems }: LibraryProps) {
   };
 
   const handleGenerateHints = async () => {
-    const answerValue = newItemForm.answer.trim();
+    let answerValue = '';
     
-    if (!answerValue) {
-      toast.error('Please enter an answer first');
-      return;
+    if (newItemForm.answerType === 'single') {
+      answerValue = newItemForm.answer.trim();
+      if (!answerValue) {
+        toast.error('Please enter an answer first');
+        return;
+      }
+    } else {
+      const validAnswers = newItemForm.validAnswers.filter(a => a.trim() !== '');
+      if (validAnswers.length === 0) {
+        toast.error('Please enter at least one valid answer first');
+        return;
+      }
+      answerValue = validAnswers.join(', ');
     }
 
     setIsGeneratingHints(true);
@@ -93,10 +103,14 @@ export function Library({ allItems, userProgress, setAllItems }: LibraryProps) {
     try {
       const categoryName = categories.find(c => c.id === newItemForm.categoryId)?.name || 'general topic';
       
-      const prompt = window.spark.llmPrompt`You are a memory training assistant. Generate exactly TWO progressive hints for remembering the answer "${answerValue}" in the category "${categoryName}".
+      const contextType = newItemForm.answerType === 'multiple' 
+        ? 'multiple answers: ' + answerValue 
+        : 'answer: ' + answerValue;
+      
+      const prompt = (window.spark.llmPrompt as any)`You are a memory training assistant. Generate exactly TWO progressive hints for remembering the ${contextType} in the category "${categoryName}".
 
 The hints should:
-- Be helpful memory triggers without giving away the answer directly
+- Be helpful memory triggers without giving away the answer(s) directly
 - Progress from more subtle to more obvious
 - Be concise (1-2 sentences each)
 - Be appropriate and understandable
@@ -713,7 +727,11 @@ If the answer is nonsensical, gibberish, inappropriate, or cannot be understood,
                         variant="outline"
                         size="sm"
                         onClick={handleGenerateHints}
-                        disabled={!newItemForm.answer.trim() || isGeneratingHints}
+                        disabled={
+                          isGeneratingHints || 
+                          (newItemForm.answerType === 'single' && !newItemForm.answer.trim()) ||
+                          (newItemForm.answerType === 'multiple' && newItemForm.validAnswers.filter(a => a.trim()).length === 0)
+                        }
                         className="gap-2 h-8 text-xs"
                       >
                         <Sparkle size={16} weight={isGeneratingHints ? 'regular' : 'fill'} className={isGeneratingHints ? 'animate-spin' : ''} />
