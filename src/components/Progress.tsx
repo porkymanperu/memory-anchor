@@ -496,6 +496,52 @@ export function Progress({ userProgress }: ProgressProps) {
                   <p className="text-sm text-muted-foreground mb-1">Total Questions</p>
                   <p className="text-2xl font-bold">{selectedSession.questionsAsked}</p>
                 </div>
+
+                {selectedSession.questions && selectedSession.questions.length > 0 && (
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground mb-3">Questions Asked</p>
+                    <div className="space-y-2 max-h-96 overflow-y-auto">
+                      {selectedSession.questions.map((q, index) => (
+                        <Card key={index} className={`border ${q.wasCorrect ? 'border-success/30 bg-success/5' : 'border-destructive/30 bg-destructive/5'}`}>
+                          <CardContent className="p-3">
+                            <div className="flex items-start gap-2 mb-2">
+                              {q.wasCorrect ? (
+                                <CheckCircle size={18} weight="fill" className="text-success flex-shrink-0 mt-0.5" />
+                              ) : (
+                                <XCircle size={18} weight="fill" className="text-destructive flex-shrink-0 mt-0.5" />
+                              )}
+                              <div className="flex-1">
+                                <p className="text-sm font-medium mb-1">{q.question}</p>
+                                <div className="text-sm">
+                                  {q.answerType === 'multiple' && q.validAnswers ? (
+                                    <div>
+                                      <p className="text-muted-foreground mb-1">Valid answers:</p>
+                                      <div className="flex flex-wrap gap-1">
+                                        {q.validAnswers.map((answer, i) => (
+                                          <Badge key={i} variant="secondary" className="text-xs">
+                                            {answer}
+                                          </Badge>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <p className="text-primary font-medium">{q.answer}</p>
+                                  )}
+                                </div>
+                                {q.hintsUsed > 0 && (
+                                  <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">
+                                    <Lightbulb size={14} weight="fill" className="text-accent" />
+                                    <span>{q.hintsUsed} hint{q.hintsUsed > 1 ? 's' : ''} used</span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </>
           )}

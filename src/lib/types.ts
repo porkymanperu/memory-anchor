@@ -48,6 +48,16 @@ export interface MemoryAssociation {
   mnemonic?: string;
 }
 
+export interface SessionQuestion {
+  itemId: string;
+  question: string;
+  answer: string;
+  answerType?: 'single' | 'multiple';
+  validAnswers?: string[];
+  wasCorrect: boolean;
+  hintsUsed: number;
+}
+
 export interface PracticeSession {
   id: string;
   date: string;
@@ -57,6 +67,7 @@ export interface PracticeSession {
   hintsUsed: number;
   averageTime: number;
   itemsReviewed: string[];
+  questions?: SessionQuestion[];
 }
 
 export interface UserProgress {

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { CategoryId, MemoryItem, UserProgress } from '@/lib/types';
+import { CategoryId, MemoryItem, UserProgress, SessionQuestion } from '@/lib/types';
 import { shuffleArray, getItemsByCategories, updateStreak, getRandomQuestion } from '@/lib/helpers';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -44,6 +44,7 @@ export function Practice({
     startTime: Date.now()
   });
   const [rememberedCount, setRememberedCount] = useState<number | null>(null);
+  const [questionResults, setQuestionResults] = useState<SessionQuestion[]>([]);
 
   useEffect(() => {
     let items = getItemsByCategories(allItems, selectedCategories);
@@ -131,6 +132,9 @@ Return the result as JSON with this structure:
   const handleMarkCorrect = () => {
     const isMultipleValueAnswer = currentItem.answerType === 'multiple' && currentItem.validAnswers;
     
+    let wasCorrect = false;
+    let currentHintsUsed = hintsRevealed;
+    
     if (isMultipleValueAnswer) {
       if (rememberedCount === null) {
         toast.error('Please select how many answers you remembered');
@@ -139,10 +143,23 @@ Return the result as JSON with this structure:
       const totalAnswers = currentItem.validAnswers!.length;
       const partialCorrect = rememberedCount / totalAnswers;
       setSessionStats(prev => ({ ...prev, correct: prev.correct + partialCorrect }));
+      wasCorrect = rememberedCount === totalAnswers;
     } else {
       setSessionStats(prev => ({ ...prev, correct: prev.correct + 1 }));
+      wasCorrect = true;
     }
     
+    const questionResult: SessionQuestion = {
+      itemId: currentItem.id,
+      question: currentItem.displayQuestion,
+      answer: currentItem.answer,
+      answerType: currentItem.answerType,
+      validAnswers: currentItem.validAnswers,
+      wasCorrect,
+      hintsUsed: currentHintsUsed
+    };
+    
+    setQuestionResults(prev => [...prev, questionResult]);
     handleNext();
   };
 
@@ -171,7 +188,8 @@ Return the result as JSON with this structure:
       questionsCorrect: sessionStats.correct,
       hintsUsed: sessionStats.hintsUsed,
       averageTime: averageTime,
-      itemsReviewed: sessionItems.map(item => item.id)
+      itemsReviewed: sessionItems.map(item => item.id),
+      questions: questionResults
     };
     
     setUserProgress(prev => ({
