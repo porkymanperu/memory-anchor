@@ -67,6 +67,7 @@ export interface UserProgress {
   difficultItems: string[];
   favoriteItems: string[];
   customItems: string[];
+  sessions: PracticeSession[];
 }
 
 export interface PracticeState {

@@ -83,12 +83,26 @@ export function Practice({
 
   const finishSession = () => {
     const newProgress = updateStreak(userProgress);
+    const totalTime = Date.now() - sessionStats.startTime;
+    const averageTime = Math.round(totalTime / sessionItems.length / 1000);
+    
+    const newSession = {
+      id: Date.now().toString(),
+      date: new Date().toISOString(),
+      categoryIds: selectedCategories,
+      questionsAsked: sessionItems.length,
+      questionsCorrect: sessionStats.correct,
+      hintsUsed: sessionStats.hintsUsed,
+      averageTime: averageTime,
+      itemsReviewed: sessionItems.map(item => item.id)
+    };
     
     setUserProgress(prev => ({
       ...newProgress,
       totalSessions: prev.totalSessions + 1,
       totalQuestionsAnswered: prev.totalQuestionsAnswered + sessionItems.length,
-      totalCorrectAnswers: prev.totalCorrectAnswers + sessionStats.correct
+      totalCorrectAnswers: prev.totalCorrectAnswers + sessionStats.correct,
+      sessions: [newSession, ...prev.sessions]
     }));
 
     const accuracy = Math.round((sessionStats.correct / sessionItems.length) * 100);

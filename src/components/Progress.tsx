@@ -1,16 +1,25 @@
-import { UserProgress } from '@/lib/types';
+import { useState } from 'react';
+import { UserProgress, PracticeSession } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Fire, Trophy, Target, TrendUp } from '@phosphor-icons/react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Fire, Trophy, Target, TrendUp, Clock, CheckCircle, XCircle, Lightbulb } from '@phosphor-icons/react';
 import { formatDate } from '@/lib/helpers';
+import { categories } from '@/lib/data';
+import { Badge } from '@/components/ui/badge';
 
 interface ProgressProps {
   userProgress: UserProgress;
 }
 
 export function Progress({ userProgress }: ProgressProps) {
+  const [selectedSession, setSelectedSession] = useState<PracticeSession | null>(null);
   const accuracy = userProgress.totalQuestionsAnswered > 0
     ? Math.round((userProgress.totalCorrectAnswers / userProgress.totalQuestionsAnswered) * 100)
     : 0;
+
+  const getCategoryName = (categoryId: string) => {
+    return categories.find(c => c.id === categoryId)?.name || categoryId;
+  };
 
   return (
     <div className="pb-20 min-h-screen">
@@ -82,8 +91,75 @@ export function Progress({ userProgress }: ProgressProps) {
           </CardContent>
         </Card>
 
+        {userProgress.sessions && userProgress.sessions.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Session History</CardTitle>
+              <CardDescription>
+                Tap any session to view details
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {userProgress.sessions.slice(0, 10).map((session) => {
+                const sessionAccuracy = Math.round((session.questionsCorrect / session.questionsAsked) * 100);
+                return (
+                  <button
+                    key={session.id}
+                    onClick={() => setSelectedSession(session)}
+                    className="w-full text-left transition-all hover:scale-[1.02] active:scale-[0.98]"
+                  >
+                    <Card className="border-2 hover:border-primary/40 hover:bg-secondary/30">
+                      <CardContent className="p-4">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <p className="text-sm text-muted-foreground">
+                                {formatDate(session.date)}
+                              </p>
+                              <span className="text-xs text-muted-foreground">•</span>
+                              <p className="text-sm text-muted-foreground">
+                                {session.questionsAsked} questions
+                              </p>
+                            </div>
+                            <div className="flex flex-wrap gap-2 mb-2">
+                              {session.categoryIds.map((catId) => (
+                                <Badge key={catId} variant="secondary" className="text-xs">
+                                  {getCategoryName(catId)}
+                                </Badge>
+                              ))}
+                            </div>
+                            <div className="flex items-center gap-4 text-sm">
+                              <div className="flex items-center gap-1">
+                                <CheckCircle size={16} weight="fill" className="text-success" />
+                                <span>{session.questionsCorrect} correct</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Clock size={16} weight="duotone" className="text-muted-foreground" />
+                                <span>{session.averageTime}s avg</span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex-shrink-0 text-right">
+                            <p className={`text-2xl font-bold ${
+                              sessionAccuracy >= 80 ? 'text-success' : 
+                              sessionAccuracy >= 60 ? 'text-accent' : 
+                              'text-muted-foreground'
+                            }`}>
+                              {sessionAccuracy}%
+                            </p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </button>
+                );
+              })}
+            </CardContent>
+          </Card>
+        )}
+
         {userProgress.lastPracticeDate && (
-          <Card className="bg-secondary/30 border-secondary">
+          <Card className="bg-secondary/30 border-secondary mt-6">
             <CardHeader>
               <CardTitle className="text-lg">Last Practice</CardTitle>
               <CardDescription>
@@ -104,6 +180,85 @@ export function Progress({ userProgress }: ProgressProps) {
           </Card>
         )}
       </div>
+
+      <Dialog open={selectedSession !== null} onOpenChange={(open) => !open && setSelectedSession(null)}>
+        <DialogContent className="max-w-lg">
+          {selectedSession && (
+            <>
+              <DialogHeader>
+                <DialogTitle>Session Details</DialogTitle>
+                <DialogDescription>
+                  {formatDate(selectedSession.date)}
+                </DialogDescription>
+              </DialogHeader>
+              
+              <div className="space-y-6">
+                <div className="grid grid-cols-2 gap-4">
+                  <Card>
+                    <CardContent className="pt-6 text-center">
+                      <p className="text-3xl font-bold text-success mb-1">
+                        {Math.round((selectedSession.questionsCorrect / selectedSession.questionsAsked) * 100)}%
+                      </p>
+                      <p className="text-sm text-muted-foreground">Accuracy</p>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardContent className="pt-6 text-center">
+                      <p className="text-3xl font-bold mb-1">{selectedSession.averageTime}s</p>
+                      <p className="text-sm text-muted-foreground">Avg Time</p>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between p-3 bg-success/10 rounded-lg border border-success/20">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle size={20} weight="fill" className="text-success" />
+                      <span className="font-medium">Correct Answers</span>
+                    </div>
+                    <span className="text-lg font-bold">{selectedSession.questionsCorrect}</span>
+                  </div>
+
+                  <div className="flex items-center justify-between p-3 bg-destructive/10 rounded-lg border border-destructive/20">
+                    <div className="flex items-center gap-2">
+                      <XCircle size={20} weight="fill" className="text-destructive" />
+                      <span className="font-medium">Incorrect</span>
+                    </div>
+                    <span className="text-lg font-bold">
+                      {selectedSession.questionsAsked - selectedSession.questionsCorrect}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between p-3 bg-accent/10 rounded-lg border border-accent/20">
+                    <div className="flex items-center gap-2">
+                      <Lightbulb size={20} weight="fill" className="text-accent" />
+                      <span className="font-medium">Hints Used</span>
+                    </div>
+                    <span className="text-lg font-bold">{selectedSession.hintsUsed}</span>
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground mb-2">Categories Practiced</p>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedSession.categoryIds.map((catId) => (
+                      <Badge key={catId} variant="secondary">
+                        {getCategoryName(catId)}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="bg-muted/50 rounded-lg p-4 text-center">
+                  <p className="text-sm text-muted-foreground mb-1">Total Questions</p>
+                  <p className="text-2xl font-bold">{selectedSession.questionsAsked}</p>
+                </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

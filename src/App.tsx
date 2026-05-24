@@ -25,7 +25,8 @@ function App() {
     totalCorrectAnswers: 0,
     difficultItems: [],
     favoriteItems: [],
-    customItems: []
+    customItems: [],
+    sessions: []
   });
 
   const startPractice = (categories: CategoryId[], difficulty: 'easy' | 'medium' | 'hard' | 'all' = 'all') => {
@@ -53,7 +54,8 @@ function App() {
             totalCorrectAnswers: 0,
             difficultItems: [],
             favoriteItems: [],
-            customItems: []
+            customItems: [],
+            sessions: []
           }}
         />
       )}
