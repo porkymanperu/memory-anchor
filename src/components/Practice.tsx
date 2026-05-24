@@ -319,30 +319,6 @@ Return the result as JSON with this structure:
                       </motion.div>
                     )}
 
-                    <div className="bg-secondary/50 rounded-lg p-6 space-y-4">
-                      <div>
-                        <p className="font-semibold text-sm text-primary uppercase tracking-wide mb-2">
-                          {currentItem.association.technique}
-                        </p>
-                        <p className="text-muted-foreground text-sm mb-3">
-                          {currentItem.association.explanation}
-                        </p>
-                      </div>
-
-                      <div className="bg-card rounded-md p-4 border-l-4 border-primary">
-                        <p className="font-secondary text-base leading-relaxed">
-                          {currentItem.association.imagery}
-                        </p>
-                      </div>
-
-                      {currentItem.association.mnemonic && (
-                        <div className="bg-accent/5 rounded-md p-4 border border-accent/20">
-                          <p className="text-sm font-medium text-accent mb-1">Memory Trick</p>
-                          <p className="text-foreground italic">"{currentItem.association.mnemonic}"</p>
-                        </div>
-                      )}
-                    </div>
-
                     {!aiAssociation && (
                       <div className="flex justify-center">
                         <Button
