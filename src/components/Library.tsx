@@ -137,7 +137,8 @@ export function Library({ allItems, userProgress, setAllItems }: LibraryProps) {
   const filteredItems = allItems.filter(item => {
     const matchesSearch = 
       item.answer.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.question.toLowerCase().includes(searchQuery.toLowerCase());
+      item.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (item.questions && item.questions.some(q => q.toLowerCase().includes(searchQuery.toLowerCase())));
     const matchesCategory = selectedCategory === 'all' || item.categoryId === selectedCategory;
     return matchesSearch && matchesCategory;
   });
@@ -831,18 +832,26 @@ export function Library({ allItems, userProgress, setAllItems }: LibraryProps) {
                             className="flex-shrink-0 text-muted-foreground group-hover:text-primary transition-colors"
                             style={{ color: getCategoryColor(item.categoryId) }}
                           />
-                          <div className="flex-1 min-w-0 flex items-center gap-2">
-                            <span className="font-medium text-sm truncate group-hover:text-primary transition-colors">
-                              {item.answer}
-                            </span>
-                            {userProgress.favoriteItems?.includes(item.id) && (
-                              <Star size={14} weight="fill" className="text-accent flex-shrink-0" />
-                            )}
-                            {item.questions && item.questions.length > 1 && (
-                              <span className="text-xs text-muted-foreground flex-shrink-0">
-                                ({item.questions.length})
+                          <div className="flex-1 min-w-0 flex flex-col gap-0.5">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-sm truncate group-hover:text-primary transition-colors">
+                                {item.answer}
                               </span>
-                            )}
+                              {userProgress.favoriteItems?.includes(item.id) && (
+                                <Star size={14} weight="fill" className="text-accent flex-shrink-0" />
+                              )}
+                              {item.questions && item.questions.length > 1 && (
+                                <Badge 
+                                  variant="secondary" 
+                                  className="text-[10px] h-4 px-1.5 flex-shrink-0 bg-primary/10 text-primary border-primary/20"
+                                >
+                                  {item.questions.length} questions
+                                </Badge>
+                              )}
+                            </div>
+                            <span className="text-xs text-muted-foreground truncate">
+                              {item.question}
+                            </span>
                           </div>
                           <svg className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
