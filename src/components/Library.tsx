@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { MagnifyingGlass, Star, X, ArrowLeft, Sparkle, FilmStrip, MusicNote, MapPin, ShoppingBag } from '@phosphor-icons/react';
 import { categories } from '@/lib/data';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface LibraryProps {
@@ -333,7 +333,7 @@ export function Library({ allItems, userProgress }: LibraryProps) {
           className="mb-6 space-y-3"
         >
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-bold text-foreground uppercase tracking-wide">Categories</h2>
+            <h2 className="text-sm font-bold text-foreground uppercase tracking-wide">Category</h2>
             {selectedCategory !== 'all' && (
               <Button
                 variant="ghost"
@@ -341,61 +341,45 @@ export function Library({ allItems, userProgress }: LibraryProps) {
                 onClick={() => setSelectedCategory('all')}
                 className="text-xs h-7"
               >
-                Clear filter
+                Clear
               </Button>
             )}
           </div>
           
-          <ScrollArea className="w-full">
-            <div className="flex flex-wrap gap-2 pb-2">
-              <Button
-                variant={selectedCategory === 'all' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setSelectedCategory('all')}
-                className="whitespace-nowrap shadow-sm"
-              >
-                All Categories ({filteredCategories.reduce((sum, cat) => sum + cat.count, 0)})
-              </Button>
+          <Select
+            value={selectedCategory}
+            onValueChange={(value) => setSelectedCategory(value as CategoryId | 'all')}
+          >
+            <SelectTrigger className="h-12 border-2 shadow-sm">
+              <SelectValue placeholder="Select a category" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">
+                <div className="flex items-center justify-between w-full gap-3">
+                  <span className="font-medium">All Categories</span>
+                  <Badge variant="secondary" className="text-xs">
+                    {filteredCategories.reduce((sum, cat) => sum + cat.count, 0)}
+                  </Badge>
+                </div>
+              </SelectItem>
               {filteredCategories.map(cat => (
-                <motion.div
-                  key={cat.id}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <Button
-                    variant={selectedCategory === cat.id ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setSelectedCategory(cat.id)}
-                    className="whitespace-nowrap shadow-sm border-2"
-                    style={
-                      selectedCategory === cat.id
-                        ? { 
-                            backgroundColor: cat.color, 
-                            borderColor: cat.color,
-                            color: 'white'
-                          }
-                        : {
-                            borderColor: `${cat.color}40`,
-                          }
-                    }
-                  >
-                    <span className="font-medium">{cat.name}</span>
-                    <Badge 
-                      variant="secondary" 
-                      className="ml-2 h-5 min-w-5 px-1.5"
-                      style={
-                        selectedCategory === cat.id
-                          ? { backgroundColor: 'rgba(255, 255, 255, 0.25)', color: 'white' }
-                          : {}
-                      }
-                    >
+                <SelectItem key={cat.id} value={cat.id}>
+                  <div className="flex items-center justify-between w-full gap-3">
+                    <div className="flex items-center gap-2">
+                      <div 
+                        className="w-3 h-3 rounded-full flex-shrink-0" 
+                        style={{ backgroundColor: cat.color }}
+                      />
+                      <span className="font-medium">{cat.name}</span>
+                    </div>
+                    <Badge variant="secondary" className="text-xs">
                       {cat.count}
                     </Badge>
-                  </Button>
-                </motion.div>
+                  </div>
+                </SelectItem>
               ))}
-            </div>
-          </ScrollArea>
+            </SelectContent>
+          </Select>
         </motion.div>
 
         <AnimatePresence mode="wait">
