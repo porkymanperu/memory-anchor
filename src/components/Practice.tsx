@@ -102,7 +102,7 @@ export function Practice({
       totalSessions: prev.totalSessions + 1,
       totalQuestionsAnswered: prev.totalQuestionsAnswered + sessionItems.length,
       totalCorrectAnswers: prev.totalCorrectAnswers + sessionStats.correct,
-      sessions: [newSession, ...prev.sessions]
+      sessions: [newSession, ...(Array.isArray(prev.sessions) ? prev.sessions : [])]
     }));
 
     const accuracy = Math.round((sessionStats.correct / sessionItems.length) * 100);
