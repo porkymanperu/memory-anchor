@@ -62,9 +62,10 @@ export function Home({ onStartPractice, userProgress }: HomeProps) {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setShowCategoryDialog(true)}
-            className="w-32 h-32 rounded-full bg-primary text-primary-foreground shadow-2xl hover:shadow-primary/50 transition-all duration-300 flex items-center justify-center group"
+            className="w-48 h-48 rounded-full bg-white text-primary shadow-2xl hover:shadow-xl transition-all duration-300 flex flex-col items-center justify-center group gap-2"
           >
-            <Play size={48} weight="fill" className="ml-1 group-hover:scale-110 transition-transform" />
+            <Play size={40} weight="fill" className="ml-1 group-hover:scale-110 transition-transform" />
+            <span className="font-semibold text-lg">Start Session</span>
           </motion.button>
         </div>
 
