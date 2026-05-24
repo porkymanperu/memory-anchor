@@ -73,7 +73,7 @@ export function formatDate(dateString: string): string {
 }
 
 export async function generateMemoryAssociation(item: MemoryItem): Promise<any> {
-  const prompt = window.spark.llmPrompt`You are a memory association expert helping people remember names, places, and information using cognitive science techniques.
+  const promptText = `You are a memory association expert helping people remember names, places, and information using cognitive science techniques.
 
 Given this memory item:
 - Answer: ${item.answer}
@@ -98,7 +98,7 @@ Return a JSON object with this structure:
 Make it creative, memorable, and tailored to the specific name or item.`;
 
   try {
-    const response = await window.spark.llm(prompt, 'gpt-4o-mini', true);
+    const response = await window.spark.llm(promptText, 'gpt-4o-mini', true);
     const result = JSON.parse(response);
     return result;
   } catch (error) {
@@ -112,7 +112,7 @@ Make it creative, memorable, and tailored to the specific name or item.`;
 }
 
 export async function generateHints(item: MemoryItem): Promise<[string, string]> {
-  const prompt = window.spark.llmPrompt`You are helping create progressive hints for a memory training app.
+  const promptText = `You are helping create progressive hints for a memory training app.
 
 Given this memory item:
 - Question: ${item.question}
@@ -129,7 +129,7 @@ Return as a JSON object with a "hints" property containing exactly 2 hints in an
 }`;
 
   try {
-    const response = await window.spark.llm(prompt, 'gpt-4o-mini', true);
+    const response = await window.spark.llm(promptText, 'gpt-4o-mini', true);
     const result = JSON.parse(response);
     return result.hints as [string, string];
   } catch (error) {
@@ -141,7 +141,7 @@ Return as a JSON object with a "hints" property containing exactly 2 hints in an
 }
 
 export async function generateQuestion(answer: string, categoryId: CategoryId): Promise<string> {
-  const prompt = window.spark.llmPrompt`You are creating conversational memory questions for a name recall training app.
+  const promptText = `You are creating conversational memory questions for a name recall training app.
 
 Generate a natural, conversational question that would help someone recall this answer:
 - Answer: ${answer}
@@ -156,7 +156,7 @@ The question should:
 Return ONLY the question text, nothing else.`;
 
   try {
-    const response = await window.spark.llm(prompt, 'gpt-4o-mini', false);
+    const response = await window.spark.llm(promptText, 'gpt-4o-mini', false);
     return response.trim().replace(/^["']|["']$/g, '');
   } catch (error) {
     return `What is the name related to ${answer}?`;
