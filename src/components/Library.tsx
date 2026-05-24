@@ -1,12 +1,13 @@
 import { useState } from 'react';
-import { CategoryId, MemoryItem, UserProgress } from '@/lib/types';
+import { CategoryId, MemoryItem, UserProgress, CategoryGroup } from '@/lib/types';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MagnifyingGlass, Star, X, ArrowLeft } from '@phosphor-icons/react';
+import { MagnifyingGlass, Star, X, ArrowLeft, Sparkle, FilmStrip, MusicNote, MapPin, ShoppingBag } from '@phosphor-icons/react';
 import { categories } from '@/lib/data';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface LibraryProps {
   allItems: MemoryItem[];
@@ -18,6 +19,7 @@ export function Library({ allItems, userProgress }: LibraryProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<CategoryId | 'all'>('all');
   const [selectedItem, setSelectedItem] = useState<MemoryItem | null>(null);
+  const [selectedGroup, setSelectedGroup] = useState<CategoryGroup | 'all'>('all');
 
   const filteredItems = allItems.filter(item => {
     const matchesSearch = 
@@ -40,208 +42,409 @@ export function Library({ allItems, userProgress }: LibraryProps) {
     count: allItems.filter(item => item.categoryId === cat.id).length
   }));
 
+  const filteredCategories = selectedGroup === 'all' 
+    ? itemsByCategory 
+    : itemsByCategory.filter(cat => cat.group === selectedGroup);
+
+  const groupIcons = {
+    entertainment: FilmStrip,
+    places: MapPin,
+    brands: ShoppingBag
+  };
+
+  const groupCounts = {
+    entertainment: allItems.filter(item => categories.find(c => c.id === item.categoryId)?.group === 'entertainment').length,
+    places: allItems.filter(item => categories.find(c => c.id === item.categoryId)?.group === 'places').length,
+    brands: allItems.filter(item => categories.find(c => c.id === item.categoryId)?.group === 'brands').length
+  };
+
   if (selectedItem) {
     return (
-      <div className="pb-20 min-h-screen">
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="pb-20 min-h-screen"
+      >
         <div className="max-w-2xl mx-auto px-4 py-6">
           <Button
             variant="ghost"
             onClick={() => setSelectedItem(null)}
-            className="mb-4 -ml-2"
+            className="mb-4 -ml-2 group"
           >
-            <ArrowLeft size={20} />
+            <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
             Back to Library
           </Button>
 
-          <Card className="border-2">
-            <CardHeader>
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1">
-                  <Badge 
-                    variant="secondary" 
-                    className="mb-3 w-fit"
-                    style={{ backgroundColor: `${getCategoryColor(selectedItem.categoryId)}20`, color: getCategoryColor(selectedItem.categoryId) }}
-                  >
-                    {getCategoryName(selectedItem.categoryId)}
-                  </Badge>
-                  <CardTitle className="text-3xl mb-3">{selectedItem.answer}</CardTitle>
-                  <CardDescription className="text-base leading-relaxed">
-                    {selectedItem.question}
-                  </CardDescription>
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.1 }}
+          >
+            <Card className="border-2 overflow-hidden shadow-lg">
+              <div 
+                className="h-2 w-full"
+                style={{ backgroundColor: getCategoryColor(selectedItem.categoryId) }}
+              />
+              <CardHeader>
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1">
+                    <Badge 
+                      variant="secondary" 
+                      className="mb-3 w-fit font-medium"
+                      style={{ 
+                        backgroundColor: `${getCategoryColor(selectedItem.categoryId)}15`, 
+                        color: getCategoryColor(selectedItem.categoryId),
+                        borderColor: `${getCategoryColor(selectedItem.categoryId)}30`,
+                      }}
+                    >
+                      {getCategoryName(selectedItem.categoryId)}
+                    </Badge>
+                    <CardTitle className="text-3xl mb-3 leading-tight">{selectedItem.answer}</CardTitle>
+                    <CardDescription className="text-base leading-relaxed">
+                      {selectedItem.question}
+                    </CardDescription>
+                  </div>
+                  {userProgress.favoriteItems?.includes(selectedItem.id) && (
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ type: "spring", stiffness: 200 }}
+                    >
+                      <Star size={24} weight="fill" className="text-accent flex-shrink-0" />
+                    </motion.div>
+                  )}
                 </div>
-                {userProgress.favoriteItems?.includes(selectedItem.id) && (
-                  <Star size={24} weight="fill" className="text-accent flex-shrink-0" />
-                )}
-              </div>
-            </CardHeader>
+              </CardHeader>
 
-            <CardContent className="space-y-6">
-              <div className="space-y-4">
-                <div>
-                  <h3 className="text-sm font-bold text-primary uppercase tracking-wide mb-2">
-                    Hints
-                  </h3>
-                  <div className="space-y-2">
-                    {selectedItem.hints.map((hint, index) => (
-                      <div key={index} className="bg-muted/50 rounded-lg p-3 border-l-2 border-accent">
-                        <p className="text-sm">
-                          <span className="font-semibold text-accent mr-2">Hint {index + 1}:</span>
-                          {hint}
+              <CardContent className="space-y-6">
+                <div className="space-y-4">
+                  <div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <Sparkle size={16} weight="fill" className="text-accent" />
+                      <h3 className="text-sm font-bold text-primary uppercase tracking-wide">
+                        Hints
+                      </h3>
+                    </div>
+                    <div className="space-y-2">
+                      {selectedItem.hints.map((hint, index) => (
+                        <motion.div
+                          key={index}
+                          initial={{ x: -20, opacity: 0 }}
+                          animate={{ x: 0, opacity: 1 }}
+                          transition={{ delay: 0.2 + index * 0.1 }}
+                          className="bg-gradient-to-r from-accent/10 to-transparent rounded-lg p-3 border-l-2 border-accent"
+                        >
+                          <p className="text-sm">
+                            <span className="font-semibold text-accent mr-2">Hint {index + 1}:</span>
+                            {hint}
+                          </p>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <motion.div
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.4 }}
+                    className="bg-secondary/20 rounded-xl p-5 space-y-4 border border-secondary/30"
+                  >
+                    <div>
+                      <h3 className="text-sm font-bold text-primary uppercase tracking-wide mb-2">
+                        {selectedItem.association.technique}
+                      </h3>
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        {selectedItem.association.explanation}
+                      </p>
+                    </div>
+                    
+                    <div className="bg-card rounded-lg p-4 border-l-4 border-primary shadow-sm">
+                      <h4 className="text-xs font-semibold text-primary uppercase tracking-wide mb-2 flex items-center gap-1">
+                        Mental Imagery
+                      </h4>
+                      <p className="font-secondary text-sm leading-relaxed italic">
+                        {selectedItem.association.imagery}
+                      </p>
+                    </div>
+                    
+                    {selectedItem.association.mnemonic && (
+                      <div className="bg-gradient-to-br from-accent/10 to-accent/5 rounded-lg p-4 border border-accent/30">
+                        <h4 className="text-xs font-semibold text-accent uppercase tracking-wide mb-2">
+                          Mnemonic Device
+                        </h4>
+                        <p className="text-sm italic text-foreground font-medium">
+                          "{selectedItem.association.mnemonic}"
                         </p>
                       </div>
-                    ))}
-                  </div>
-                </div>
+                    )}
+                  </motion.div>
 
-                <div className="bg-secondary/30 rounded-lg p-5 space-y-4">
-                  <div>
-                    <h3 className="text-sm font-bold text-primary uppercase tracking-wide mb-2">
-                      {selectedItem.association.technique}
-                    </h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                      {selectedItem.association.explanation}
-                    </p>
-                  </div>
-                  
-                  <div className="bg-card rounded-lg p-4 border-l-4 border-primary">
-                    <h4 className="text-xs font-semibold text-primary uppercase tracking-wide mb-2">
-                      Mental Imagery
-                    </h4>
-                    <p className="font-secondary text-sm leading-relaxed">
-                      {selectedItem.association.imagery}
-                    </p>
-                  </div>
-                  
-                  {selectedItem.association.mnemonic && (
-                    <div className="bg-accent/10 rounded-lg p-4 border border-accent/30">
-                      <h4 className="text-xs font-semibold text-accent uppercase tracking-wide mb-2">
-                        Mnemonic
-                      </h4>
-                      <p className="text-sm italic text-foreground">
-                        "{selectedItem.association.mnemonic}"
-                      </p>
+                  {selectedItem.difficulty && (
+                    <div className="flex items-center gap-2 pt-2">
+                      <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                        Difficulty:
+                      </span>
+                      <Badge 
+                        variant={selectedItem.difficulty === 'easy' ? 'default' : selectedItem.difficulty === 'medium' ? 'secondary' : 'destructive'}
+                        className="capitalize"
+                      >
+                        {selectedItem.difficulty}
+                      </Badge>
                     </div>
                   )}
                 </div>
-
-                {selectedItem.difficulty && (
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                      Difficulty:
-                    </span>
-                    <Badge 
-                      variant={selectedItem.difficulty === 'easy' ? 'default' : selectedItem.difficulty === 'medium' ? 'secondary' : 'destructive'}
-                      className="capitalize"
-                    >
-                      {selectedItem.difficulty}
-                    </Badge>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </motion.div>
         </div>
-      </div>
+      </motion.div>
     );
   }
 
   return (
-    <div className="pb-20 min-h-screen">
+    <div className="pb-20 min-h-screen bg-gradient-to-b from-background to-muted/20">
       <div className="max-w-2xl mx-auto px-4 py-8">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold mb-2">Memory Library</h1>
-          <p className="text-muted-foreground">
-            Browse and search all memory items
+        <motion.div 
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className="mb-8"
+        >
+          <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+            Memory Library
+          </h1>
+          <p className="text-muted-foreground text-lg">
+            Explore {allItems.length} memory items across {categories.length} categories
           </p>
-        </div>
+        </motion.div>
 
-        <div className="relative mb-4">
-          <MagnifyingGlass size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+        <motion.div 
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.1 }}
+          className="relative mb-6"
+        >
+          <MagnifyingGlass size={20} className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground z-10" />
           <Input
-            placeholder="Search by name..."
+            placeholder="Search by name or question..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 h-12"
+            className="pl-12 h-14 text-base shadow-sm border-2 focus:border-primary transition-all"
           />
-        </div>
+          {searchQuery && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setSearchQuery('')}
+              className="absolute right-2 top-1/2 transform -translate-y-1/2"
+            >
+              <X size={16} />
+            </Button>
+          )}
+        </motion.div>
 
-        <div className="mb-6 -mx-4 px-4">
-          <div className="overflow-x-auto">
-            <div className="flex gap-2 pb-2 min-w-max">
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.2 }}
+          className="mb-6 space-y-4"
+        >
+          <div className="flex items-center gap-2">
+            <h2 className="text-sm font-bold text-foreground uppercase tracking-wide">Filter by Group</h2>
+            {selectedGroup !== 'all' && (
+              <Badge variant="secondary" className="text-xs">
+                {groupCounts[selectedGroup as CategoryGroup]} items
+              </Badge>
+            )}
+          </div>
+          
+          <div className="grid grid-cols-4 gap-2">
+            <Button
+              variant={selectedGroup === 'all' ? 'default' : 'outline'}
+              onClick={() => {
+                setSelectedGroup('all');
+                setSelectedCategory('all');
+              }}
+              className="flex-col h-auto py-3 gap-1"
+            >
+              <Sparkle size={20} weight={selectedGroup === 'all' ? 'fill' : 'regular'} />
+              <span className="text-xs font-medium">All</span>
+              <span className="text-xs opacity-70">{allItems.length}</span>
+            </Button>
+            
+            {(Object.keys(groupIcons) as CategoryGroup[]).map((group) => {
+              const Icon = groupIcons[group];
+              return (
+                <Button
+                  key={group}
+                  variant={selectedGroup === group ? 'default' : 'outline'}
+                  onClick={() => {
+                    setSelectedGroup(group);
+                    setSelectedCategory('all');
+                  }}
+                  className="flex-col h-auto py-3 gap-1"
+                >
+                  <Icon size={20} weight={selectedGroup === group ? 'fill' : 'regular'} />
+                  <span className="text-xs font-medium capitalize">{group}</span>
+                  <span className="text-xs opacity-70">{groupCounts[group]}</span>
+                </Button>
+              );
+            })}
+          </div>
+        </motion.div>
+
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.3 }}
+          className="mb-6 space-y-3"
+        >
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-bold text-foreground uppercase tracking-wide">Categories</h2>
+            {selectedCategory !== 'all' && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSelectedCategory('all')}
+                className="text-xs h-7"
+              >
+                Clear filter
+              </Button>
+            )}
+          </div>
+          
+          <ScrollArea className="w-full">
+            <div className="flex flex-wrap gap-2 pb-2">
               <Button
                 variant={selectedCategory === 'all' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setSelectedCategory('all')}
-                className="whitespace-nowrap flex-shrink-0"
+                className="whitespace-nowrap shadow-sm"
               >
-                All ({allItems.length})
+                All Categories ({filteredCategories.reduce((sum, cat) => sum + cat.count, 0)})
               </Button>
-              {itemsByCategory.map(cat => (
-                <Button
+              {filteredCategories.map(cat => (
+                <motion.div
                   key={cat.id}
-                  variant={selectedCategory === cat.id ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setSelectedCategory(cat.id)}
-                  className="whitespace-nowrap flex-shrink-0"
-                  style={
-                    selectedCategory === cat.id
-                      ? { backgroundColor: cat.color, borderColor: cat.color }
-                      : {}
-                  }
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                 >
-                  {cat.name} ({cat.count})
-                </Button>
+                  <Button
+                    variant={selectedCategory === cat.id ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setSelectedCategory(cat.id)}
+                    className="whitespace-nowrap shadow-sm border-2"
+                    style={
+                      selectedCategory === cat.id
+                        ? { 
+                            backgroundColor: cat.color, 
+                            borderColor: cat.color,
+                            color: 'white'
+                          }
+                        : {
+                            borderColor: `${cat.color}40`,
+                          }
+                    }
+                  >
+                    <span className="font-medium">{cat.name}</span>
+                    <Badge 
+                      variant="secondary" 
+                      className="ml-2 h-5 min-w-5 px-1.5"
+                      style={
+                        selectedCategory === cat.id
+                          ? { backgroundColor: 'rgba(255, 255, 255, 0.25)', color: 'white' }
+                          : {}
+                      }
+                    >
+                      {cat.count}
+                    </Badge>
+                  </Button>
+                </motion.div>
               ))}
             </div>
-          </div>
-        </div>
+          </ScrollArea>
+        </motion.div>
 
-        <div className="space-y-2">
-          {filteredItems.length === 0 ? (
-            <Card>
-              <CardContent className="pt-12 pb-12 text-center">
-                <p className="text-muted-foreground">No items found</p>
-              </CardContent>
-            </Card>
-          ) : (
-            filteredItems.map(item => (
-              <button
-                key={item.id}
-                onClick={() => setSelectedItem(item)}
-                className="w-full text-left group"
-              >
-                <Card className="hover:border-primary/50 hover:bg-accent/5 transition-all">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between gap-4">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className="text-lg font-semibold group-hover:text-primary transition-colors truncate">
-                            {item.answer}
-                          </h3>
-                          {userProgress.favoriteItems?.includes(item.id) && (
-                            <Star size={16} weight="fill" className="text-accent flex-shrink-0" />
-                          )}
+        <AnimatePresence mode="wait">
+          <motion.div 
+            key={selectedCategory + searchQuery}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.2 }}
+            className="space-y-3"
+          >
+            {filteredItems.length === 0 ? (
+              <Card className="border-2 border-dashed">
+                <CardContent className="pt-16 pb-16 text-center">
+                  <MagnifyingGlass size={48} className="mx-auto mb-4 text-muted-foreground opacity-50" />
+                  <p className="text-muted-foreground text-lg font-medium mb-1">No items found</p>
+                  <p className="text-sm text-muted-foreground">Try adjusting your search or filters</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <>
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-sm text-muted-foreground">
+                    Showing <span className="font-semibold text-foreground">{filteredItems.length}</span> {filteredItems.length === 1 ? 'item' : 'items'}
+                  </p>
+                </div>
+                {filteredItems.map((item, index) => (
+                  <motion.button
+                    key={item.id}
+                    onClick={() => setSelectedItem(item)}
+                    className="w-full text-left group"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.03 }}
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.99 }}
+                  >
+                    <Card className="hover:border-primary/50 hover:shadow-lg transition-all border-2 overflow-hidden">
+                      <div 
+                        className="h-1 w-full transition-all group-hover:h-1.5"
+                        style={{ backgroundColor: getCategoryColor(item.categoryId) }}
+                      />
+                      <CardContent className="p-5">
+                        <div className="flex items-center justify-between gap-4">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-2">
+                              <h3 className="text-lg font-bold group-hover:text-primary transition-colors truncate">
+                                {item.answer}
+                              </h3>
+                              {userProgress.favoriteItems?.includes(item.id) && (
+                                <Star size={18} weight="fill" className="text-accent flex-shrink-0" />
+                              )}
+                            </div>
+                            <Badge 
+                              variant="secondary" 
+                              className="text-xs font-medium mb-2"
+                              style={{ 
+                                backgroundColor: `${getCategoryColor(item.categoryId)}15`, 
+                                color: getCategoryColor(item.categoryId),
+                                borderColor: `${getCategoryColor(item.categoryId)}30`
+                              }}
+                            >
+                              {getCategoryName(item.categoryId)}
+                            </Badge>
+                            <p className="text-sm text-muted-foreground line-clamp-1">
+                              {item.question}
+                            </p>
+                          </div>
+                          <div className="text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all">
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            </svg>
+                          </div>
                         </div>
-                        <Badge 
-                          variant="secondary" 
-                          className="text-xs"
-                          style={{ backgroundColor: `${getCategoryColor(item.categoryId)}20`, color: getCategoryColor(item.categoryId) }}
-                        >
-                          {getCategoryName(item.categoryId)}
-                        </Badge>
-                      </div>
-                      <div className="text-muted-foreground group-hover:text-primary transition-colors">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </button>
-            ))
-          )}
-        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.button>
+                ))}
+              </>
+            )}
+          </motion.div>
+        </AnimatePresence>
       </div>
     </div>
   );
