@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { CategoryId, MemoryItem, UserProgress, CategoryGroup } from '@/lib/types';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MagnifyingGlass, Star, X, ArrowLeft, Sparkle, FilmStrip, MusicNote, MapPin, ShoppingBag, User, FilmReel, MusicNotes, Microphone, Disc, Buildings, ForkKnife, Signpost, TShirt, Sneaker, Watch, Drop, Diamond, Plus } from '@phosphor-icons/react';
+import { MagnifyingGlass, Star, X, ArrowLeft, Sparkle, FilmStrip, MusicNote, MapPin, ShoppingBag, User, FilmReel, MusicNotes, Microphone, Disc, Buildings, ForkKnife, Signpost, TShirt, Sneaker, Watch, Drop, Diamond, Plus, Image as ImageIcon, Upload } from '@phosphor-icons/react';
 import { categories } from '@/lib/data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -27,6 +27,9 @@ export function Library({ allItems, userProgress, setAllItems }: LibraryProps) {
   const [selectedItem, setSelectedItem] = useState<MemoryItem | null>(null);
   const [selectedGroup, setSelectedGroup] = useState<CategoryGroup | 'all'>('all');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [imagePreview, setImagePreview] = useState<string>('');
+  const [uploadMode, setUploadMode] = useState<'url' | 'upload'>('url');
   
   const [newItemForm, setNewItemForm] = useState({
     categoryId: 'actors' as CategoryId,
@@ -41,6 +44,40 @@ export function Library({ allItems, userProgress, setAllItems }: LibraryProps) {
     answerImageUrl: '',
     difficulty: 'medium' as 'easy' | 'medium' | 'hard',
   });
+
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please upload a valid image file');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image size must be less than 5MB');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const dataUrl = reader.result as string;
+      setNewItemForm({ ...newItemForm, answerImageUrl: dataUrl });
+      setImagePreview(dataUrl);
+    };
+    reader.onerror = () => {
+      toast.error('Failed to read image file');
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveImage = () => {
+    setNewItemForm({ ...newItemForm, answerImageUrl: '' });
+    setImagePreview('');
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
 
   const handleAddItem = () => {
     if (!newItemForm.answer.trim() || !newItemForm.question.trim()) {
@@ -93,6 +130,8 @@ export function Library({ allItems, userProgress, setAllItems }: LibraryProps) {
       answerImageUrl: '',
       difficulty: 'medium',
     });
+    setImagePreview('');
+    setUploadMode('url');
   };
 
   const filteredItems = allItems.filter(item => {
@@ -503,16 +542,87 @@ export function Library({ allItems, userProgress, setAllItems }: LibraryProps) {
                         />
                       </div>
 
-                      <div className="space-y-2">
-                        <Label htmlFor="answerImageUrl">Answer Image URL (optional)</Label>
-                        <Input
-                          id="answerImageUrl"
-                          placeholder="e.g., https://example.com/image.jpg"
-                          value={newItemForm.answerImageUrl}
-                          onChange={(e) => setNewItemForm({ ...newItemForm, answerImageUrl: e.target.value })}
-                        />
+                      <div className="space-y-3">
+                        <Label>Answer Image (optional)</Label>
+                        <div className="flex gap-2 mb-3">
+                          <Button
+                            type="button"
+                            variant={uploadMode === 'url' ? 'default' : 'outline'}
+                            onClick={() => setUploadMode('url')}
+                            className="flex-1 gap-2"
+                            size="sm"
+                          >
+                            <ImageIcon size={16} />
+                            URL
+                          </Button>
+                          <Button
+                            type="button"
+                            variant={uploadMode === 'upload' ? 'default' : 'outline'}
+                            onClick={() => setUploadMode('upload')}
+                            className="flex-1 gap-2"
+                            size="sm"
+                          >
+                            <Upload size={16} />
+                            Upload
+                          </Button>
+                        </div>
+
+                        {uploadMode === 'url' ? (
+                          <Input
+                            id="answerImageUrl"
+                            placeholder="e.g., https://example.com/image.jpg"
+                            value={newItemForm.answerImageUrl}
+                            onChange={(e) => setNewItemForm({ ...newItemForm, answerImageUrl: e.target.value })}
+                          />
+                        ) : (
+                          <div>
+                            <input
+                              ref={fileInputRef}
+                              type="file"
+                              accept="image/*"
+                              onChange={handleImageUpload}
+                              className="hidden"
+                              id="image-upload"
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() => fileInputRef.current?.click()}
+                              className="w-full gap-2"
+                            >
+                              <Upload size={18} />
+                              Choose Image
+                            </Button>
+                          </div>
+                        )}
+
+                        {(imagePreview || (uploadMode === 'url' && newItemForm.answerImageUrl)) && (
+                          <div className="relative rounded-lg overflow-hidden border-2 border-primary/20 bg-muted/30">
+                            <img
+                              src={imagePreview || newItemForm.answerImageUrl}
+                              alt="Preview"
+                              className="w-full h-48 object-contain"
+                              onError={() => {
+                                if (uploadMode === 'url') {
+                                  toast.error('Failed to load image from URL');
+                                }
+                              }}
+                            />
+                            <Button
+                              type="button"
+                              variant="destructive"
+                              size="sm"
+                              onClick={handleRemoveImage}
+                              className="absolute top-2 right-2 gap-1"
+                            >
+                              <X size={14} />
+                              Remove
+                            </Button>
+                          </div>
+                        )}
+
                         <p className="text-xs text-muted-foreground">
-                          This image will appear when the answer is revealed to help reinforce memory
+                          This image will appear when the answer is revealed to help reinforce memory. Max file size: 5MB
                         </p>
                       </div>
                     </div>
