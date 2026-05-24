@@ -119,6 +119,33 @@ export function Library({ allItems, userProgress }: LibraryProps) {
 
               <CardContent className="space-y-6">
                 <div className="space-y-4">
+                  {selectedItem.questions && selectedItem.questions.length > 0 && (
+                    <div>
+                      <div className="flex items-center gap-2 mb-3">
+                        <Sparkle size={16} weight="fill" className="text-primary" />
+                        <h3 className="text-sm font-bold text-primary uppercase tracking-wide">
+                          Question Variations
+                        </h3>
+                      </div>
+                      <div className="space-y-2">
+                        {selectedItem.questions.map((q, index) => (
+                          <motion.div
+                            key={index}
+                            initial={{ x: -20, opacity: 0 }}
+                            animate={{ x: 0, opacity: 1 }}
+                            transition={{ delay: 0.1 + index * 0.05 }}
+                            className="bg-gradient-to-r from-primary/10 to-transparent rounded-lg p-3 border-l-2 border-primary"
+                          >
+                            <p className="text-sm">
+                              <span className="font-semibold text-primary mr-2">{index + 1}.</span>
+                              {q}
+                            </p>
+                          </motion.div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   <div>
                     <div className="flex items-center gap-2 mb-3">
                       <Sparkle size={16} weight="fill" className="text-accent" />
@@ -132,7 +159,7 @@ export function Library({ allItems, userProgress }: LibraryProps) {
                           key={index}
                           initial={{ x: -20, opacity: 0 }}
                           animate={{ x: 0, opacity: 1 }}
-                          transition={{ delay: 0.2 + index * 0.1 }}
+                          transition={{ delay: (selectedItem.questions?.length || 0) * 0.05 + 0.2 + index * 0.1 }}
                           className="bg-gradient-to-r from-accent/10 to-transparent rounded-lg p-3 border-l-2 border-accent"
                         >
                           <p className="text-sm">

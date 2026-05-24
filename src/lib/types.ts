@@ -27,6 +27,7 @@ export interface MemoryItem {
   id: string;
   categoryId: CategoryId;
   question: string;
+  questions?: string[];
   answer: string;
   hints: [string, string];
   association: MemoryAssociation;

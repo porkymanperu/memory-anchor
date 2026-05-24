@@ -9,6 +9,14 @@ export function shuffleArray<T>(array: T[]): T[] {
   return newArray;
 }
 
+export function getRandomQuestion(item: MemoryItem): string {
+  if (item.questions && item.questions.length > 0) {
+    const randomIndex = Math.floor(Math.random() * item.questions.length);
+    return item.questions[randomIndex];
+  }
+  return item.question;
+}
+
 export function getItemsByCategories(
   items: MemoryItem[],
   categoryIds: CategoryId[]

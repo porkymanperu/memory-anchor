@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { CategoryId, MemoryItem, UserProgress } from '@/lib/types';
-import { shuffleArray, getItemsByCategories, updateStreak } from '@/lib/helpers';
+import { shuffleArray, getItemsByCategories, updateStreak, getRandomQuestion } from '@/lib/helpers';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -16,6 +16,8 @@ interface PracticeProps {
   onExit: () => void;
 }
 
+type SessionItem = MemoryItem & { displayQuestion: string };
+
 export function Practice({
   selectedCategories,
   allItems,
@@ -23,7 +25,7 @@ export function Practice({
   setUserProgress,
   onExit
 }: PracticeProps) {
-  const [sessionItems, setSessionItems] = useState<MemoryItem[]>([]);
+  const [sessionItems, setSessionItems] = useState<SessionItem[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [hintsRevealed, setHintsRevealed] = useState(0);
   const [answerRevealed, setAnswerRevealed] = useState(false);
@@ -36,7 +38,11 @@ export function Practice({
   useEffect(() => {
     const items = getItemsByCategories(allItems, selectedCategories);
     const shuffled = shuffleArray(items).slice(0, 10);
-    setSessionItems(shuffled);
+    const withDisplayQuestions = shuffled.map(item => ({
+      ...item,
+      displayQuestion: getRandomQuestion(item)
+    }));
+    setSessionItems(withDisplayQuestions);
   }, [allItems, selectedCategories]);
 
   const currentItem = sessionItems[currentIndex];
@@ -96,7 +102,7 @@ export function Practice({
         </div>
       </div>
     );
-  }
+  };
 
   return (
     <div className="min-h-screen pb-20 bg-gradient-to-b from-background to-secondary/20">
@@ -131,7 +137,7 @@ export function Practice({
             <Card className="mb-6 border-2">
               <CardContent className="pt-8 pb-8">
                 <p className="text-2xl font-semibold leading-relaxed text-center mb-6">
-                  {currentItem.question}
+                  {currentItem.displayQuestion}
                 </p>
 
                 {currentItem.imageUrl && (

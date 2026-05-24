@@ -99,6 +99,11 @@ export const sampleMemoryItems: MemoryItem[] = [
     id: '1',
     categoryId: 'musicians',
     question: "What's the name of the guitarist from Pearl Jam whose name sounds like a physical object?",
+    questions: [
+      "What's the name of the guitarist from Pearl Jam whose name sounds like a physical object?",
+      "Who is the rhythm guitarist and co-founder of Pearl Jam?",
+      "Which Pearl Jam member has a first name that's a type of rock?"
+    ],
     answer: 'Stone Gossard',
     hints: [
       "Think of something hard you might find on the ground",
@@ -117,6 +122,11 @@ export const sampleMemoryItems: MemoryItem[] = [
     id: '2',
     categoryId: 'movies',
     question: "What's the movie where Leonardo DiCaprio goes inside people's dreams to plant ideas?",
+    questions: [
+      "What's the movie where Leonardo DiCaprio goes inside people's dreams to plant ideas?",
+      "What's the Christopher Nolan film about dream manipulation and shared dreaming?",
+      "Which movie features a team extracting secrets from people's subconscious while they sleep?"
+    ],
     answer: 'Inception',
     hints: [
       "The title relates to the beginning of something",
@@ -135,6 +145,11 @@ export const sampleMemoryItems: MemoryItem[] = [
     id: '3',
     categoryId: 'musicians',
     question: "What's the name of the band with vegetables that are red, hot, and spicy?",
+    questions: [
+      "What's the name of the band with vegetables that are red, hot, and spicy?",
+      "Which rock band is named after a type of hot pepper?",
+      "Who are the musicians famous for 'Californication' and 'Under the Bridge'?"
+    ],
     answer: 'Red Hot Chili Peppers',
     hints: [
       "Think of the hottest peppers you can eat",
@@ -153,6 +168,11 @@ export const sampleMemoryItems: MemoryItem[] = [
     id: '4',
     categoryId: 'albums',
     question: "What's the famous Nirvana album with a baby swimming underwater on the cover?",
+    questions: [
+      "What's the famous Nirvana album with a baby swimming underwater on the cover?",
+      "Which Nirvana album features a baby reaching for a dollar bill underwater?",
+      "What's the second studio album by Nirvana released in 1991?"
+    ],
     answer: 'Nevermind',
     hints: [
       "The title is a casual response you'd give when someone asks you to repeat something",
@@ -171,6 +191,11 @@ export const sampleMemoryItems: MemoryItem[] = [
     id: '5',
     categoryId: 'actors',
     question: "Who's the British actor known for playing both a wizard headmaster and a mutant mentor?",
+    questions: [
+      "Who's the British actor known for playing both a wizard headmaster and a mutant mentor?",
+      "Who played Gandalf in Lord of the Rings and Magneto in X-Men?",
+      "Which legendary British actor portrayed both a wizard and a master of magnetism?"
+    ],
     answer: 'Ian McKellen',
     hints: [
       "His first name rhymes with 'man'",
@@ -189,6 +214,11 @@ export const sampleMemoryItems: MemoryItem[] = [
     id: '6',
     categoryId: 'cities',
     question: "What's the city in Japan famous for thousands of red torii gates on a mountain?",
+    questions: [
+      "What's the city in Japan famous for thousands of red torii gates on a mountain?",
+      "Which former imperial capital of Japan is known for Fushimi Inari Shrine?",
+      "What Japanese city has over 2,000 temples and shrines?"
+    ],
     answer: 'Kyoto',
     hints: [
       "It's a two-syllable city name that starts with 'K'",
@@ -207,6 +237,11 @@ export const sampleMemoryItems: MemoryItem[] = [
     id: '7',
     categoryId: 'luxury-brands',
     question: "What's the Italian luxury brand with a prancing horse logo?",
+    questions: [
+      "What's the Italian luxury brand with a prancing horse logo?",
+      "Which supercar manufacturer was founded by Enzo in Maranello?",
+      "What sports car brand is synonymous with Formula 1 racing?"
+    ],
     answer: 'Ferrari',
     hints: [
       "The name starts with 'F' and is associated with supercars",
@@ -225,6 +260,11 @@ export const sampleMemoryItems: MemoryItem[] = [
     id: '8',
     categoryId: 'movies',
     question: "What's the Spielberg movie about a friendly alien who wants to phone home?",
+    questions: [
+      "What's the Spielberg movie about a friendly alien who wants to phone home?",
+      "Which 1982 film features a young boy befriending an extraterrestrial?",
+      "What movie is famous for the bicycle flying across the moon scene?"
+    ],
     answer: 'E.T. the Extra-Terrestrial',
     hints: [
       "The title is abbreviated to two letters",
@@ -243,6 +283,11 @@ export const sampleMemoryItems: MemoryItem[] = [
     id: '9',
     categoryId: 'songs',
     question: "What's the Queen song with Galileo's name repeated in the opera section?",
+    questions: [
+      "What's the Queen song with Galileo's name repeated in the opera section?",
+      "Which Queen track is known for its mix of ballad, opera, and hard rock?",
+      "What's Freddie Mercury's most famous six-minute epic?"
+    ],
     answer: 'Bohemian Rhapsody',
     hints: [
       "The title has two words, both starting with 'B' and 'R'",
@@ -261,6 +306,11 @@ export const sampleMemoryItems: MemoryItem[] = [
     id: '10',
     categoryId: 'watch-brands',
     question: "What's the Swiss luxury watch brand with a crown logo?",
+    questions: [
+      "What's the Swiss luxury watch brand with a crown logo?",
+      "Which timepiece brand is most associated with luxury and prestige?",
+      "What watch manufacturer has been worn by James Bond?"
+    ],
     answer: 'Rolex',
     hints: [
       "It's a five-letter name starting with 'R'",
@@ -279,6 +329,11 @@ export const sampleMemoryItems: MemoryItem[] = [
     id: '11',
     categoryId: 'actors',
     question: "Who's the actor famous for playing a boxer named Rocky and an action hero named Rambo?",
+    questions: [
+      "Who's the actor famous for playing a boxer named Rocky and an action hero named Rambo?",
+      "Which action star wrote and starred in the Rocky film series?",
+      "Who played the Philadelphia boxer who fought Apollo Creed?"
+    ],
     answer: 'Sylvester Stallone',
     hints: [
       "His first name is shared with a cartoon cat",
@@ -297,6 +352,11 @@ export const sampleMemoryItems: MemoryItem[] = [
     id: '12',
     categoryId: 'restaurants',
     question: "What's the name of the famous sushi restaurant in Ginza that has three Michelin stars?",
+    questions: [
+      "What's the name of the famous sushi restaurant in Ginza that has three Michelin stars?",
+      "Which Tokyo sushi restaurant was featured in 'Jiro Dreams of Sushi'?",
+      "What's the name of master chef Jiro Ono's restaurant?"
+    ],
     answer: 'Sukiyabashi Jiro',
     hints: [
       "It's named after the master chef Jiro",
