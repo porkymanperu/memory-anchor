@@ -4,23 +4,93 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MagnifyingGlass, Star, X, ArrowLeft, Sparkle, FilmStrip, MusicNote, MapPin, ShoppingBag, User, FilmReel, MusicNotes, Microphone, Disc, Buildings, ForkKnife, Signpost, TShirt, Sneaker, Watch, Drop, Diamond } from '@phosphor-icons/react';
+import { MagnifyingGlass, Star, X, ArrowLeft, Sparkle, FilmStrip, MusicNote, MapPin, ShoppingBag, User, FilmReel, MusicNotes, Microphone, Disc, Buildings, ForkKnife, Signpost, TShirt, Sneaker, Watch, Drop, Diamond, Plus } from '@phosphor-icons/react';
 import { categories } from '@/lib/data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getCategoryIcon } from '@/lib/helpers';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { toast } from 'sonner';
 
 interface LibraryProps {
   allItems: MemoryItem[];
   userProgress: UserProgress;
   setUserProgress: (updater: (prev: UserProgress) => UserProgress) => void;
+  setAllItems: (updater: (prev: MemoryItem[]) => MemoryItem[]) => void;
 }
 
-export function Library({ allItems, userProgress }: LibraryProps) {
+export function Library({ allItems, userProgress, setAllItems }: LibraryProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<CategoryId | 'all'>('all');
   const [selectedItem, setSelectedItem] = useState<MemoryItem | null>(null);
   const [selectedGroup, setSelectedGroup] = useState<CategoryGroup | 'all'>('all');
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  
+  const [newItemForm, setNewItemForm] = useState({
+    categoryId: 'actors' as CategoryId,
+    answer: '',
+    question: '',
+    hint1: '',
+    hint2: '',
+    technique: 'Visual Association',
+    explanation: '',
+    imagery: '',
+    mnemonic: '',
+    difficulty: 'medium' as 'easy' | 'medium' | 'hard',
+  });
+
+  const handleAddItem = () => {
+    if (!newItemForm.answer.trim() || !newItemForm.question.trim()) {
+      toast.error('Please fill in at least the answer and question fields');
+      return;
+    }
+
+    if (!newItemForm.hint1.trim() || !newItemForm.hint2.trim()) {
+      toast.error('Please provide two hints');
+      return;
+    }
+
+    if (!newItemForm.explanation.trim() || !newItemForm.imagery.trim()) {
+      toast.error('Please provide memory association details');
+      return;
+    }
+
+    const newItem: MemoryItem = {
+      id: `custom-${Date.now()}`,
+      categoryId: newItemForm.categoryId,
+      answer: newItemForm.answer.trim(),
+      question: newItemForm.question.trim(),
+      hints: [newItemForm.hint1.trim(), newItemForm.hint2.trim()],
+      association: {
+        technique: newItemForm.technique,
+        explanation: newItemForm.explanation.trim(),
+        imagery: newItemForm.imagery.trim(),
+        mnemonic: newItemForm.mnemonic.trim() || undefined,
+      },
+      isCustom: true,
+      difficulty: newItemForm.difficulty,
+    };
+
+    setAllItems((prev) => [...prev, newItem]);
+    
+    toast.success('Memory item added successfully!');
+    setIsAddDialogOpen(false);
+    
+    setNewItemForm({
+      categoryId: 'actors',
+      answer: '',
+      question: '',
+      hint1: '',
+      hint2: '',
+      technique: 'Visual Association',
+      explanation: '',
+      imagery: '',
+      mnemonic: '',
+      difficulty: 'medium',
+    });
+  };
 
   const filteredItems = allItems.filter(item => {
     const matchesSearch = 
@@ -250,12 +320,190 @@ export function Library({ allItems, userProgress }: LibraryProps) {
           animate={{ y: 0, opacity: 1 }}
           className="mb-8"
         >
-          <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            Memory Library
-          </h1>
-          <p className="text-muted-foreground text-lg">
-            Explore {allItems.length} memory items across {categories.length} categories
-          </p>
+          <div className="flex items-start justify-between gap-4 mb-2">
+            <div>
+              <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                Memory Library
+              </h1>
+              <p className="text-muted-foreground text-lg">
+                Explore {allItems.length} memory items across {categories.length} categories
+              </p>
+            </div>
+            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="flex-shrink-0 gap-2 shadow-md">
+                  <Plus size={20} weight="bold" />
+                  Add Item
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle className="text-2xl">Add New Memory Item</DialogTitle>
+                  <DialogDescription>
+                    Create a custom memory item to practice with. Fill in all fields to create an effective memory aid.
+                  </DialogDescription>
+                </DialogHeader>
+                
+                <div className="space-y-6 py-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="category">Category</Label>
+                    <Select
+                      value={newItemForm.categoryId}
+                      onValueChange={(value) => setNewItemForm({ ...newItemForm, categoryId: value as CategoryId })}
+                    >
+                      <SelectTrigger id="category">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categories.map(cat => {
+                          const CategoryIcon = getCategoryIcon(cat.icon);
+                          return (
+                            <SelectItem key={cat.id} value={cat.id}>
+                              <div className="flex items-center gap-2">
+                                <CategoryIcon 
+                                  size={16} 
+                                  weight="duotone"
+                                  style={{ color: cat.color }}
+                                />
+                                <span>{cat.name}</span>
+                              </div>
+                            </SelectItem>
+                          );
+                        })}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="answer">Answer (What you're trying to remember) *</Label>
+                    <Input
+                      id="answer"
+                      placeholder="e.g., Leonardo DiCaprio"
+                      value={newItemForm.answer}
+                      onChange={(e) => setNewItemForm({ ...newItemForm, answer: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="question">Question *</Label>
+                    <Textarea
+                      id="question"
+                      placeholder="e.g., Who played Jack in Titanic?"
+                      value={newItemForm.question}
+                      onChange={(e) => setNewItemForm({ ...newItemForm, question: e.target.value })}
+                      rows={2}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="hint1">Hint 1 *</Label>
+                      <Input
+                        id="hint1"
+                        placeholder="First hint"
+                        value={newItemForm.hint1}
+                        onChange={(e) => setNewItemForm({ ...newItemForm, hint1: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="hint2">Hint 2 *</Label>
+                      <Input
+                        id="hint2"
+                        placeholder="Second hint"
+                        value={newItemForm.hint2}
+                        onChange={(e) => setNewItemForm({ ...newItemForm, hint2: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="difficulty">Difficulty</Label>
+                    <Select
+                      value={newItemForm.difficulty}
+                      onValueChange={(value) => setNewItemForm({ ...newItemForm, difficulty: value as 'easy' | 'medium' | 'hard' })}
+                    >
+                      <SelectTrigger id="difficulty">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="easy">Easy</SelectItem>
+                        <SelectItem value="medium">Medium</SelectItem>
+                        <SelectItem value="hard">Hard</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="border-t pt-6">
+                    <h3 className="font-semibold mb-4 flex items-center gap-2">
+                      <Sparkle size={18} weight="fill" className="text-accent" />
+                      Memory Association
+                    </h3>
+
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="technique">Technique</Label>
+                        <Input
+                          id="technique"
+                          placeholder="e.g., Visual Association, Sound Connection"
+                          value={newItemForm.technique}
+                          onChange={(e) => setNewItemForm({ ...newItemForm, technique: e.target.value })}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="explanation">Explanation *</Label>
+                        <Textarea
+                          id="explanation"
+                          placeholder="Explain why this memory technique works..."
+                          value={newItemForm.explanation}
+                          onChange={(e) => setNewItemForm({ ...newItemForm, explanation: e.target.value })}
+                          rows={2}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="imagery">Mental Imagery *</Label>
+                        <Textarea
+                          id="imagery"
+                          placeholder="Describe the vivid mental image to remember..."
+                          value={newItemForm.imagery}
+                          onChange={(e) => setNewItemForm({ ...newItemForm, imagery: e.target.value })}
+                          rows={3}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="mnemonic">Mnemonic Device (optional)</Label>
+                        <Input
+                          id="mnemonic"
+                          placeholder="e.g., An acronym or phrase to help remember"
+                          value={newItemForm.mnemonic}
+                          onChange={(e) => setNewItemForm({ ...newItemForm, mnemonic: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3 pt-4">
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsAddDialogOpen(false)}
+                      className="flex-1"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={handleAddItem}
+                      className="flex-1 gap-2"
+                    >
+                      <Plus size={18} weight="bold" />
+                      Add Memory Item
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
         </motion.div>
 
         <motion.div 

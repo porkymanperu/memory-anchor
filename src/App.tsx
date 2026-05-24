@@ -74,6 +74,7 @@ function App() {
           allItems={allItems}
           userProgress={userProgress}
           setUserProgress={setUserProgress as any}
+          setAllItems={setAllItems as any}
         />
       )}
       
