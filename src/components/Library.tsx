@@ -406,66 +406,43 @@ export function Library({ allItems, userProgress }: LibraryProps) {
                     Showing <span className="font-semibold text-foreground">{filteredItems.length}</span> {filteredItems.length === 1 ? 'item' : 'items'}
                   </p>
                 </div>
-                {filteredItems.map((item, index) => (
-                  <motion.button
-                    key={item.id}
-                    onClick={() => setSelectedItem(item)}
-                    className="w-full text-left group"
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.03 }}
-                    whileHover={{ scale: 1.01 }}
-                    whileTap={{ scale: 0.99 }}
-                  >
-                    <Card className="hover:border-primary/50 hover:shadow-lg transition-all border-2 overflow-hidden">
-                      <div 
-                        className="h-1 w-full transition-all group-hover:h-1.5"
-                        style={{ backgroundColor: getCategoryColor(item.categoryId) }}
-                      />
-                      <CardContent className="p-5">
-                        <div className="flex items-center justify-between gap-4">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-2">
-                              <h3 className="text-lg font-bold group-hover:text-primary transition-colors truncate">
-                                {item.answer}
-                              </h3>
-                              {userProgress.favoriteItems?.includes(item.id) && (
-                                <Star size={18} weight="fill" className="text-accent flex-shrink-0" />
-                              )}
-                            </div>
-                            <Badge 
-                              variant="secondary" 
-                              className="text-xs font-medium mb-2"
-                              style={{ 
-                                backgroundColor: `${getCategoryColor(item.categoryId)}15`, 
-                                color: getCategoryColor(item.categoryId),
-                                borderColor: `${getCategoryColor(item.categoryId)}30`
-                              }}
-                            >
-                              {getCategoryName(item.categoryId)}
-                            </Badge>
-                            <p className="text-sm text-muted-foreground line-clamp-1">
-                              {item.question}
-                            </p>
-                            {item.questions && item.questions.length > 1 && (
-                              <div className="flex items-center gap-1.5 mt-2">
-                                <Badge variant="outline" className="text-xs font-medium border-primary/40 text-primary bg-primary/5">
-                                  <Sparkle size={12} weight="fill" className="mr-1" />
-                                  {item.questions.length} question variations
-                                </Badge>
-                              </div>
-                            )}
-                          </div>
-                          <div className="text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all">
-                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                            </svg>
-                          </div>
+                <div className="grid gap-2">
+                  {filteredItems.map((item, index) => (
+                    <motion.button
+                      key={item.id}
+                      onClick={() => setSelectedItem(item)}
+                      className="w-full text-left group"
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.02 }}
+                      whileHover={{ scale: 1.005 }}
+                      whileTap={{ scale: 0.995 }}
+                    >
+                      <div className="flex items-center gap-3 px-4 py-2.5 bg-card border border-border rounded-lg hover:border-primary/50 hover:bg-accent/5 transition-all">
+                        <div 
+                          className="w-1 h-8 rounded-full flex-shrink-0"
+                          style={{ backgroundColor: getCategoryColor(item.categoryId) }}
+                        />
+                        <div className="flex-1 min-w-0 flex items-center gap-2">
+                          <span className="font-medium text-sm truncate group-hover:text-primary transition-colors">
+                            {item.answer}
+                          </span>
+                          {userProgress.favoriteItems?.includes(item.id) && (
+                            <Star size={14} weight="fill" className="text-accent flex-shrink-0" />
+                          )}
+                          {item.questions && item.questions.length > 1 && (
+                            <span className="text-xs text-muted-foreground flex-shrink-0">
+                              ({item.questions.length})
+                            </span>
+                          )}
                         </div>
-                      </CardContent>
-                    </Card>
-                  </motion.button>
-                ))}
+                        <svg className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </div>
+                    </motion.button>
+                  ))}
+                </div>
               </>
             )}
           </motion.div>
