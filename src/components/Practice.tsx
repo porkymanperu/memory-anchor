@@ -129,11 +129,24 @@ Return the result as JSON with this structure:
     }
   };
 
+  const recordQuestionResult = (wasCorrect: boolean) => {
+    const questionResult: SessionQuestion = {
+      itemId: currentItem.id,
+      question: currentItem.displayQuestion,
+      answer: currentItem.answer,
+      answerType: currentItem.answerType,
+      validAnswers: currentItem.validAnswers,
+      wasCorrect,
+      hintsUsed: hintsRevealed
+    };
+    
+    setQuestionResults(prev => [...prev, questionResult]);
+  };
+
   const handleMarkCorrect = () => {
     const isMultipleValueAnswer = currentItem.answerType === 'multiple' && currentItem.validAnswers;
     
     let wasCorrect = false;
-    let currentHintsUsed = hintsRevealed;
     
     if (isMultipleValueAnswer) {
       if (rememberedCount === null) {
@@ -149,17 +162,12 @@ Return the result as JSON with this structure:
       wasCorrect = true;
     }
     
-    const questionResult: SessionQuestion = {
-      itemId: currentItem.id,
-      question: currentItem.displayQuestion,
-      answer: currentItem.answer,
-      answerType: currentItem.answerType,
-      validAnswers: currentItem.validAnswers,
-      wasCorrect,
-      hintsUsed: currentHintsUsed
-    };
-    
-    setQuestionResults(prev => [...prev, questionResult]);
+    recordQuestionResult(wasCorrect);
+    handleNext();
+  };
+
+  const handleSkip = () => {
+    recordQuestionResult(false);
     handleNext();
   };
 
@@ -476,7 +484,7 @@ Return the result as JSON with this structure:
                     <div className="flex gap-3 pt-4">
                       <Button
                         variant="outline"
-                        onClick={handleNext}
+                        onClick={handleSkip}
                         className="flex-1"
                       >
                         Skip
