@@ -29,7 +29,6 @@ export function Progress({ userProgress, setUserProgress }: ProgressProps) {
   const [showFilters, setShowFilters] = useState(false);
   const [questionFilter, setQuestionFilter] = useState<'all' | 'correct' | 'incorrect'>('all');
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [showClearAllDialog, setShowClearAllDialog] = useState(false);
   const [sessionToDelete, setSessionToDelete] = useState<string | null>(null);
   const [groupBy, setGroupBy] = useState<'none' | CategoryGroup>('none');
 
@@ -147,27 +146,6 @@ export function Progress({ userProgress, setUserProgress }: ProgressProps) {
     setShowDeleteDialog(false);
     setSessionToDelete(null);
     toast.success('Session deleted successfully');
-  };
-
-  const handleClearAllHistory = () => {
-    setShowClearAllDialog(true);
-  };
-
-  const confirmClearAllHistory = () => {
-    setUserProgress((prev) => ({
-      ...prev,
-      sessions: [],
-      totalSessions: 0,
-      totalQuestionsAnswered: 0,
-      totalCorrectAnswers: 0,
-      currentStreak: 0,
-      lastPracticeDate: '',
-    }));
-
-    setSelectedSession(null);
-    setShowClearAllDialog(false);
-    clearFilters();
-    toast.success('All session history cleared');
   };
 
   const hasCompletedToday = userProgress.sessions.some((session) => {
@@ -327,15 +305,6 @@ export function Progress({ userProgress, setUserProgress }: ProgressProps) {
                         <SelectItem value="brands">Brands</SelectItem>
                       </SelectContent>
                     </Select>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleClearAllHistory}
-                      className="gap-2 text-destructive hover:text-destructive"
-                    >
-                      <Trash size={16} />
-                      Clear All
-                    </Button>
                 <Popover open={showFilters} onOpenChange={setShowFilters}>
                   <PopoverTrigger asChild>
                     <Button
@@ -846,23 +815,6 @@ export function Progress({ userProgress, setUserProgress }: ProgressProps) {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={confirmDeleteSession} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
               Delete Session
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      <AlertDialog open={showClearAllDialog} onOpenChange={setShowClearAllDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Clear All History?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete all practice sessions, stats, and progress data. This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmClearAllHistory} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Clear All History
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
