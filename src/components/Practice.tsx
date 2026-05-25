@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 interface PracticeProps {
   selectedCategories: CategoryId[];
   selectedDifficulty: 'easy' | 'medium' | 'hard';
+  questionCount: number;
   allItems: MemoryItem[];
   userProgress: UserProgress;
   setUserProgress: (updater: (prev: UserProgress) => UserProgress) => void;
@@ -24,6 +25,7 @@ type ViewMode = 'practice' | 'completed';
 export function Practice({
   selectedCategories,
   selectedDifficulty,
+  questionCount,
   allItems,
   userProgress,
   setUserProgress,
@@ -60,25 +62,13 @@ export function Practice({
     
     items = items.filter(item => item.difficulty === selectedDifficulty);
     
-    const getQuestionCount = (difficulty: 'easy' | 'medium' | 'hard') => {
-      if (difficulty === 'easy') {
-        return Math.floor(Math.random() * 6) + 10;
-      } else if (difficulty === 'medium') {
-        return Math.floor(Math.random() * 6) + 15;
-      } else if (difficulty === 'hard') {
-        return Math.floor(Math.random() * 11) + 20;
-      }
-      return 10;
-    };
-    
-    const questionCount = getQuestionCount(selectedDifficulty);
     const shuffled = shuffleArray(items).slice(0, questionCount);
     const withDisplayQuestions = shuffled.map(item => ({
       ...item,
       displayQuestion: getRandomQuestion(item)
     }));
     setSessionItems(withDisplayQuestions);
-  }, [allItems, selectedCategories, selectedDifficulty]);
+  }, [allItems, selectedCategories, selectedDifficulty, questionCount]);
 
   const currentItem = sessionItems[currentIndex];
   const progressPercent = sessionItems.length > 0 ? ((currentIndex + 1) / sessionItems.length) * 100 : 0;

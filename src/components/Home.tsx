@@ -8,7 +8,7 @@ import { Brain, Play } from '@phosphor-icons/react';
 import { motion } from 'framer-motion';
 
 interface HomeProps {
-  onStartPractice: (categories: CategoryId[], difficulty?: 'easy' | 'medium' | 'hard') => void;
+  onStartPractice: (categories: CategoryId[], difficulty?: 'easy' | 'medium' | 'hard', questionCount?: number) => void;
   userProgress: UserProgress;
 }
 
@@ -16,6 +16,7 @@ export function Home({ onStartPractice, userProgress }: HomeProps) {
   const [showCategoryDialog, setShowCategoryDialog] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<CategoryId[]>([]);
   const [selectedDifficulty, setSelectedDifficulty] = useState<'easy' | 'medium' | 'hard'>('easy');
+  const [questionCount, setQuestionCount] = useState(10);
 
   const toggleCategory = (categoryId: CategoryId) => {
     setSelectedCategories(prev =>
@@ -27,8 +28,20 @@ export function Home({ onStartPractice, userProgress }: HomeProps) {
 
   const handleStartPractice = () => {
     if (selectedCategories.length > 0) {
-      onStartPractice(selectedCategories, selectedDifficulty);
+      onStartPractice(selectedCategories, selectedDifficulty, questionCount);
     }
+  };
+
+  const getQuestionRange = (difficulty: 'easy' | 'medium' | 'hard') => {
+    if (difficulty === 'easy') return { min: 10, max: 15 };
+    if (difficulty === 'medium') return { min: 15, max: 20 };
+    return { min: 20, max: 30 };
+  };
+
+  const handleDifficultyChange = (difficulty: 'easy' | 'medium' | 'hard') => {
+    setSelectedDifficulty(difficulty);
+    const range = getQuestionRange(difficulty);
+    setQuestionCount(range.min);
   };
 
   const groupedCategories = categories.reduce((acc, category) => {
@@ -87,7 +100,7 @@ export function Home({ onStartPractice, userProgress }: HomeProps) {
                 {(['easy', 'medium', 'hard'] as const).map((difficulty) => (
                   <button
                     key={difficulty}
-                    onClick={() => setSelectedDifficulty(difficulty)}
+                    onClick={() => handleDifficultyChange(difficulty)}
                     className={`px-4 py-3 rounded-lg border-2 transition-all font-medium text-sm capitalize ${
                       selectedDifficulty === difficulty
                         ? 'border-primary bg-primary text-primary-foreground'
@@ -103,6 +116,31 @@ export function Home({ onStartPractice, userProgress }: HomeProps) {
                 {selectedDifficulty === 'medium' && 'Moderate challenge, good for practice'}
                 {selectedDifficulty === 'hard' && 'Advanced questions for experienced learners'}
               </p>
+            </div>
+            
+            <div>
+              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+                Number of Questions
+              </h3>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-2xl font-bold text-primary">{questionCount}</span>
+                  <span className="text-sm text-muted-foreground">
+                    {getQuestionRange(selectedDifficulty).min}-{getQuestionRange(selectedDifficulty).max} questions
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min={getQuestionRange(selectedDifficulty).min}
+                  max={getQuestionRange(selectedDifficulty).max}
+                  value={questionCount}
+                  onChange={(e) => setQuestionCount(parseInt(e.target.value))}
+                  className="w-full h-2 bg-secondary rounded-lg appearance-none cursor-pointer accent-primary"
+                  style={{
+                    background: `linear-gradient(to right, hsl(var(--primary)) 0%, hsl(var(--primary)) ${((questionCount - getQuestionRange(selectedDifficulty).min) / (getQuestionRange(selectedDifficulty).max - getQuestionRange(selectedDifficulty).min)) * 100}%, hsl(var(--secondary)) ${((questionCount - getQuestionRange(selectedDifficulty).min) / (getQuestionRange(selectedDifficulty).max - getQuestionRange(selectedDifficulty).min)) * 100}%, hsl(var(--secondary)) 100%)`
+                  }}
+                />
+              </div>
             </div>
             {Object.entries(groupedCategories).map(([group, cats]) => (
               <div key={group}>

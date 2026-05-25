@@ -14,6 +14,7 @@ function App() {
   const [currentView, setCurrentView] = useState<View>('home');
   const [selectedCategories, setSelectedCategories] = useState<CategoryId[]>([]);
   const [selectedDifficulty, setSelectedDifficulty] = useState<'easy' | 'medium' | 'hard'>('easy');
+  const [questionCount, setQuestionCount] = useState<number>(10);
   const [migrated, setMigrated] = useState(false);
   
   const [allItems, setAllItems] = useKV<MemoryItem[]>('memory-items', sampleMemoryItems);
@@ -77,9 +78,10 @@ function App() {
     }
   }, [migrated, allItems, setAllItems]);
 
-  const startPractice = (categories: CategoryId[], difficulty: 'easy' | 'medium' | 'hard' = 'easy') => {
+  const startPractice = (categories: CategoryId[], difficulty: 'easy' | 'medium' | 'hard' = 'easy', count?: number) => {
     setSelectedCategories(categories);
     setSelectedDifficulty(difficulty);
+    setQuestionCount(count || 10);
     setCurrentView('practice');
   };
 
@@ -112,6 +114,7 @@ function App() {
         <Practice 
           selectedCategories={selectedCategories}
           selectedDifficulty={selectedDifficulty}
+          questionCount={questionCount}
           allItems={allItems}
           userProgress={userProgress}
           setUserProgress={setUserProgress as any}
