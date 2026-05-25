@@ -70,6 +70,17 @@ export interface PracticeSession {
   questions?: SessionQuestion[];
 }
 
+export interface ItemHistory {
+  itemId: string;
+  lastSeenDate: string | null;
+  totalAttempts: number;
+  correctAttempts: number;
+  consecutiveCorrect: number;
+  consecutiveFails: number;
+  totalHintsUsed: number;
+  lastWasCorrect: boolean;
+}
+
 export interface UserProgress {
   currentStreak: number;
   longestStreak: number;
@@ -81,6 +92,7 @@ export interface UserProgress {
   favoriteItems: string[];
   customItems: string[];
   sessions: PracticeSession[];
+  itemHistory?: Record<string, ItemHistory>;
 }
 
 export interface PracticeState {

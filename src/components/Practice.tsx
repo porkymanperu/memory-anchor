@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { CategoryId, MemoryItem, UserProgress, SessionQuestion } from '@/lib/types';
 import { shuffleArray, getItemsByCategories, updateStreak, getRandomQuestion } from '@/lib/helpers';
+import { selectQuestionsWithSpacedRepetition } from '@/lib/spaced-repetition';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -62,13 +63,18 @@ export function Practice({
     
     items = items.filter(item => item.difficulty === selectedDifficulty);
     
-    const shuffled = shuffleArray(items).slice(0, questionCount);
-    const withDisplayQuestions = shuffled.map(item => ({
+    const selectionResult = selectQuestionsWithSpacedRepetition(
+      items,
+      userProgress,
+      questionCount
+    );
+    
+    const withDisplayQuestions = selectionResult.selectedItems.map(item => ({
       ...item,
       displayQuestion: getRandomQuestion(item)
     }));
     setSessionItems(withDisplayQuestions);
-  }, [allItems, selectedCategories, selectedDifficulty, questionCount]);
+  }, [allItems, selectedCategories, selectedDifficulty, questionCount, userProgress]);
 
   const currentItem = sessionItems[currentIndex];
   const progressPercent = sessionItems.length > 0 ? ((currentIndex + 1) / sessionItems.length) * 100 : 0;
@@ -208,12 +214,47 @@ Return the result as JSON with this structure:
       questions: questionResults
     };
     
+    const updatedItemHistory = { ...(userProgress.itemHistory || {}) };
+    
+    for (const result of questionResults) {
+      const itemId = result.itemId;
+      const existing = updatedItemHistory[itemId];
+      
+      if (existing) {
+        const newConsecutiveCorrect = result.wasCorrect ? existing.consecutiveCorrect + 1 : 0;
+        const newConsecutiveFails = !result.wasCorrect ? existing.consecutiveFails + 1 : 0;
+        
+        updatedItemHistory[itemId] = {
+          itemId,
+          lastSeenDate: localDateString,
+          totalAttempts: existing.totalAttempts + 1,
+          correctAttempts: existing.correctAttempts + (result.wasCorrect ? 1 : 0),
+          consecutiveCorrect: newConsecutiveCorrect,
+          consecutiveFails: newConsecutiveFails,
+          totalHintsUsed: existing.totalHintsUsed + result.hintsUsed,
+          lastWasCorrect: result.wasCorrect
+        };
+      } else {
+        updatedItemHistory[itemId] = {
+          itemId,
+          lastSeenDate: localDateString,
+          totalAttempts: 1,
+          correctAttempts: result.wasCorrect ? 1 : 0,
+          consecutiveCorrect: result.wasCorrect ? 1 : 0,
+          consecutiveFails: result.wasCorrect ? 0 : 1,
+          totalHintsUsed: result.hintsUsed,
+          lastWasCorrect: result.wasCorrect
+        };
+      }
+    }
+    
     setUserProgress(prev => ({
       ...newProgress,
       totalSessions: prev.totalSessions + 1,
       totalQuestionsAnswered: prev.totalQuestionsAnswered + sessionItems.length,
       totalCorrectAnswers: prev.totalCorrectAnswers + sessionStats.correct,
-      sessions: [newSession, ...(Array.isArray(prev.sessions) ? prev.sessions : [])]
+      sessions: [newSession, ...(Array.isArray(prev.sessions) ? prev.sessions : [])],
+      itemHistory: updatedItemHistory
     }));
 
     const accuracy = Math.round((sessionStats.correct / sessionItems.length) * 100);

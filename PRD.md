@@ -12,12 +12,12 @@ This is a multi-feature application with practice modes, AI-generated associatio
 
 ## Essential Features
 
-### Daily Practice Mode
-- **Functionality**: Generates random conversational memory questions from selected categories with progressive hint system
-- **Purpose**: Core training experience that simulates real-world name recall situations
-- **Trigger**: User taps "Start Practice" after selecting categories
+### Daily Practice Mode with Spaced Repetition
+- **Functionality**: Generates conversational memory questions from selected categories using intelligent spaced repetition algorithm that prioritizes failed questions, introduces new content, and reviews previously successful items at optimal intervals
+- **Purpose**: Core training experience that simulates real-world name recall situations while optimizing long-term memory retention through scientifically-backed spacing effects
+- **Trigger**: User taps "Start Practice" after selecting categories and difficulty level
 - **Progression**: Category selection → Question display → "Need a Hint" (optional, up to 2 hints) → "Show Answer" → Memory association reveal → Performance tracking → Next question
-- **Success criteria**: Users can complete practice sessions, hints progressively reveal information, answers show memory associations
+- **Success criteria**: Sessions include mix of new (30%), failed (40%), and review questions (30%); failed questions reappear sooner; successful questions space out over multiple sessions; no repetitive consecutive sessions
 
 ### Memory Association Engine
 - **Functionality**: AI-generated associations using concrete imagery, sounds, rhymes, visual anchors, and story-based connections
@@ -47,12 +47,12 @@ This is a multi-feature application with practice modes, AI-generated associatio
 - **Progression**: Practice start → Category selector → Multi-select categories → Confirm → Begin questions
 - **Success criteria**: Categories display clearly, multi-select works, questions pull from selected categories only
 
-### Progress Dashboard
-- **Functionality**: Tracks daily streaks, correct recall percentage, difficult items, improvement trends
-- **Purpose**: Motivates daily practice, shows measurable improvement, identifies weak areas
+### Progress Dashboard & Performance Tracking
+- **Functionality**: Tracks daily streaks, correct recall percentage, difficult items, improvement trends, and per-item performance history with recall strength scoring
+- **Purpose**: Motivates daily practice, shows measurable improvement, identifies weak areas, provides insight into memory retention patterns
 - **Trigger**: User taps "Progress" or views home dashboard
-- **Progression**: View dashboard → See streak counter → Review recent performance → Identify difficult categories → View trends
-- **Success criteria**: Data persists between sessions, calculations accurate, visualizations clear
+- **Progression**: View dashboard → See streak counter → Review recent performance → Identify difficult categories → View trends → Analyze item-level performance
+- **Success criteria**: Data persists between sessions, calculations accurate, visualizations clear, per-item history tracks attempts/success rate/last seen date
 
 ### Custom Memory Items
 - **Functionality**: Users add their own items with custom questions, hints, answers, associations, and images
@@ -67,6 +67,13 @@ This is a multi-feature application with practice modes, AI-generated associatio
 - **Trigger**: Images appear automatically when available for current item
 - **Progression**: Question appears → Image shows (if available) → Hints may reference image → Answer shows with image → Association uses image context
 - **Success criteria**: Images load quickly, display responsively, enhance rather than distract from recall
+
+### Spaced Repetition Algorithm
+- **Functionality**: Intelligent question selection system that analyzes user performance history to optimize memory retention through properly-timed repetition intervals
+- **Purpose**: Maximizes long-term retention by presenting questions at scientifically optimal intervals based on individual performance
+- **Trigger**: Automatically runs when user starts any practice session
+- **Progression**: Session start → Analyze item history → Calculate recall strength per item → Prioritize failed questions → Include new questions → Add review questions due for reinforcement → Shuffle and present
+- **Success criteria**: Failed questions (recall strength <40%) appear in next 1-2 sessions; Medium-confidence questions (40-70%) repeat after 2+ sessions; Strong questions (70+) repeat after 3+ sessions; Each session includes 3-5 new questions; Sessions feel varied without excessive repetition
 
 ## Edge Case Handling
 
