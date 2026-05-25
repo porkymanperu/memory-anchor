@@ -4,7 +4,7 @@ import { shuffleArray, getItemsByCategories, updateStreak, getRandomQuestion } f
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Lightbulb, X, CheckCircle, ArrowRight, Sparkle } from '@phosphor-icons/react';
+import { Lightbulb, X, CheckCircle, ArrowRight, Sparkle, Trophy, Target, Clock } from '@phosphor-icons/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 
@@ -19,6 +19,8 @@ interface PracticeProps {
 
 type SessionItem = MemoryItem & { displayQuestion: string };
 
+type ViewMode = 'practice' | 'completed';
+
 export function Practice({
   selectedCategories,
   selectedDifficulty,
@@ -27,6 +29,7 @@ export function Practice({
   setUserProgress,
   onExit
 }: PracticeProps) {
+  const [viewMode, setViewMode] = useState<ViewMode>('practice');
   const [sessionItems, setSessionItems] = useState<SessionItem[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [hintsRevealed, setHintsRevealed] = useState(0);
@@ -45,6 +48,12 @@ export function Practice({
   });
   const [rememberedCount, setRememberedCount] = useState<number | null>(null);
   const [questionResults, setQuestionResults] = useState<SessionQuestion[]>([]);
+  const [completedSessionData, setCompletedSessionData] = useState<{
+    accuracy: number;
+    totalQuestions: number;
+    correctAnswers: number;
+    timeSpent: number;
+  } | null>(null);
 
   useEffect(() => {
     let items = getItemsByCategories(allItems, selectedCategories);
@@ -210,11 +219,14 @@ Return the result as JSON with this structure:
 
     const accuracy = Math.round((sessionStats.correct / sessionItems.length) * 100);
     
-    toast.success(`Session Complete! ${accuracy}% accuracy`, {
-      description: `You got ${sessionStats.correct} out of ${sessionItems.length} correct.`
+    setCompletedSessionData({
+      accuracy,
+      totalQuestions: sessionItems.length,
+      correctAnswers: Math.round(sessionStats.correct),
+      timeSpent: Math.round(totalTime / 1000 / 60)
     });
-
-    onExit();
+    
+    setViewMode('completed');
   };
 
   if (!currentItem) {
@@ -226,7 +238,107 @@ Return the result as JSON with this structure:
         </div>
       </div>
     );
-  };
+  }
+
+  if (viewMode === 'completed' && completedSessionData) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-primary/5 via-background to-accent/5 flex items-center justify-center px-4 pb-20">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="max-w-lg w-full"
+        >
+          <Card className="border-2 shadow-xl">
+            <CardContent className="pt-12 pb-10 px-6">
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+                className="flex justify-center mb-6"
+              >
+                <div className="relative">
+                  <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full"></div>
+                  <div className="relative bg-gradient-to-br from-primary to-accent rounded-full p-6">
+                    <Trophy size={64} weight="duotone" className="text-white" />
+                  </div>
+                </div>
+              </motion.div>
+
+              <motion.h1
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="text-3xl font-bold text-center mb-2"
+              >
+                Session Complete!
+              </motion.h1>
+
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.4 }}
+                className="text-center text-muted-foreground mb-8"
+              >
+                Great job on completing your practice
+              </motion.p>
+
+              <div className="space-y-4 mb-8">
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.5 }}
+                  className="bg-gradient-to-r from-primary/10 to-primary/5 rounded-xl p-4 flex items-center justify-between border border-primary/20"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="bg-primary/20 rounded-full p-3">
+                      <Target size={24} weight="duotone" className="text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground">Accuracy</p>
+                      <p className="text-2xl font-bold text-primary">{completedSessionData.accuracy}%</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm text-muted-foreground">Score</p>
+                    <p className="text-lg font-semibold">{completedSessionData.correctAnswers}/{completedSessionData.totalQuestions}</p>
+                  </div>
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.6 }}
+                  className="bg-gradient-to-r from-accent/10 to-accent/5 rounded-xl p-4 flex items-center gap-3 border border-accent/20"
+                >
+                  <div className="bg-accent/20 rounded-full p-3">
+                    <Clock size={24} weight="duotone" className="text-accent" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Time Spent</p>
+                    <p className="text-xl font-bold">{completedSessionData.timeSpent} min</p>
+                  </div>
+                </motion.div>
+              </div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.7 }}
+              >
+                <Button
+                  onClick={onExit}
+                  size="lg"
+                  className="w-full text-lg"
+                >
+                  Back to Home
+                </Button>
+              </motion.div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen pb-20 bg-gradient-to-b from-background to-secondary/20">
