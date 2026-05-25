@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { CaretLeft, CaretRight, CalendarBlank } from '@phosphor-icons/react';
 import { cn } from '@/lib/utils';
+import { getLocalDateString } from '@/lib/helpers';
 
 interface SessionCalendarProps {
   sessions: PracticeSession[];
@@ -16,7 +17,8 @@ export function SessionCalendar({ sessions, onDateClick }: SessionCalendarProps)
   const sessionsByDate = useMemo(() => {
     const map = new Map<string, PracticeSession[]>();
     sessions.forEach(session => {
-      const dateKey = new Date(session.date).toISOString().split('T')[0];
+      const sessionDate = new Date(session.date);
+      const dateKey = getLocalDateString(sessionDate);
       if (!map.has(dateKey)) {
         map.set(dateKey, []);
       }
@@ -44,7 +46,7 @@ export function SessionCalendar({ sessions, onDateClick }: SessionCalendarProps)
     
     for (let i = 0; i < startPadding; i++) {
       const prevMonthDay = new Date(year, month, -startPadding + i + 1);
-      const dateKey = prevMonthDay.toISOString().split('T')[0];
+      const dateKey = getLocalDateString(prevMonthDay);
       days.push({
         date: prevMonthDay,
         isCurrentMonth: false,
@@ -55,7 +57,7 @@ export function SessionCalendar({ sessions, onDateClick }: SessionCalendarProps)
     
     for (let day = 1; day <= daysInMonth; day++) {
       const date = new Date(year, month, day);
-      const dateKey = date.toISOString().split('T')[0];
+      const dateKey = getLocalDateString(date);
       days.push({
         date,
         isCurrentMonth: true,
@@ -67,7 +69,7 @@ export function SessionCalendar({ sessions, onDateClick }: SessionCalendarProps)
     const remainingDays = 42 - days.length;
     for (let i = 1; i <= remainingDays; i++) {
       const nextMonthDay = new Date(year, month + 1, i);
-      const dateKey = nextMonthDay.toISOString().split('T')[0];
+      const dateKey = getLocalDateString(nextMonthDay);
       days.push({
         date: nextMonthDay,
         isCurrentMonth: false,
@@ -92,7 +94,7 @@ export function SessionCalendar({ sessions, onDateClick }: SessionCalendarProps)
   };
 
   const monthName = currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-  const today = new Date().toISOString().split('T')[0];
+  const today = getLocalDateString(new Date());
 
   const getIntensityColor = (sessionCount: number) => {
     if (sessionCount === 0) return '';
@@ -156,7 +158,7 @@ export function SessionCalendar({ sessions, onDateClick }: SessionCalendarProps)
             {calendarDays.map(({ date, isCurrentMonth, sessions: daySessions, key }) => {
               if (!date) return <div key={key} />;
               
-              const dateKey = date.toISOString().split('T')[0];
+              const dateKey = getLocalDateString(date);
               const isToday = dateKey === today;
               const hasSession = daySessions.length > 0;
               

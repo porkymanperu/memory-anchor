@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Clock, CheckCircle, XCircle, Lightbulb, Funnel, X, Calendar, Target, Trash } from '@phosphor-icons/react';
-import { formatDate } from '@/lib/helpers';
+import { formatDate, getLocalDateString } from '@/lib/helpers';
 import { categories } from '@/lib/data';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -48,7 +48,8 @@ export function Progress({ userProgress, setUserProgress }: ProgressProps) {
 
     if (dateRange.start || dateRange.end) {
       filtered = filtered.filter(session => {
-        const sessionDateKey = new Date(session.date).toISOString().split('T')[0];
+        const sessionDate = new Date(session.date);
+        const sessionDateKey = getLocalDateString(sessionDate);
         
         if (dateRange.start && dateRange.end) {
           return sessionDateKey >= dateRange.start && sessionDateKey <= dateRange.end;
@@ -143,7 +144,10 @@ export function Progress({ userProgress, setUserProgress }: ProgressProps) {
 
   const hasCompletedToday = userProgress.sessions.some((session) => {
     try {
-      return isToday(parseISO(session.date));
+      const sessionDate = new Date(session.date);
+      const sessionDateKey = getLocalDateString(sessionDate);
+      const todayKey = getLocalDateString(new Date());
+      return sessionDateKey === todayKey;
     } catch {
       return false;
     }
