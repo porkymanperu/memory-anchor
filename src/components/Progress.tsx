@@ -651,7 +651,7 @@ export function Progress({ userProgress, setUserProgress }: ProgressProps) {
                 
                 <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-4">
                   <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-3 gap-3">
                       <Card>
                         <CardContent className="pt-4 pb-4 text-center px-2">
                           <p className="text-2xl font-bold text-success mb-1 break-words">
@@ -665,6 +665,19 @@ export function Progress({ userProgress, setUserProgress }: ProgressProps) {
                         <CardContent className="pt-4 pb-4 text-center px-2">
                           <p className="text-2xl font-bold mb-1 break-words">{selectedSession.averageTime}s</p>
                           <p className="text-xs text-muted-foreground">Avg Time</p>
+                        </CardContent>
+                      </Card>
+
+                      <Card>
+                        <CardContent className="pt-4 pb-4 text-center px-2">
+                          <p className="text-2xl font-bold mb-1 break-words">
+                            {selectedSession.totalTimeSeconds ? (
+                              selectedSession.totalTimeSeconds >= 60 
+                                ? `${Math.floor(selectedSession.totalTimeSeconds / 60)}:${String(selectedSession.totalTimeSeconds % 60).padStart(2, '0')}`
+                                : `${selectedSession.totalTimeSeconds}s`
+                            ) : '—'}
+                          </p>
+                          <p className="text-xs text-muted-foreground">Duration</p>
                         </CardContent>
                       </Card>
                     </div>
