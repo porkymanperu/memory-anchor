@@ -100,25 +100,25 @@ export function Practice({
         ? `Multiple answers: ${currentItem.validAnswers.join(', ')}`
         : currentItem.answer;
       
-      const promptText = `You are a memory expert helping users create memorable associations.
+      const promptText = `Eres un experto en memoria ayudando a los usuarios a crear asociaciones memorables.
 
-Generate a personalized memory association for the following:
-- Question: ${currentItem.displayQuestion}
-- Answer: ${answerText}
-- Category: ${currentItem.categoryId}
+Genera una asociación de memoria personalizada para lo siguiente:
+- Pregunta: ${currentItem.displayQuestion}
+- Respuesta: ${answerText}
+- Categoría: ${currentItem.categoryId}
 
-Create a memory association that:
-1. Uses creative techniques like phonetics, visual similarity, emotions, or storytelling
-2. Provides a short explanation of why the association works
-3. Includes vivid mental imagery or a memorable scenario
-4. Is conversational, engaging, and helps strengthen long-term recall
+Crea una asociación de memoria que:
+1. Use técnicas creativas como fonética, similitud visual, emociones o narrativa
+2. Proporcione una breve explicación de por qué funciona la asociación
+3. Incluya imágenes mentales vívidas o un escenario memorable
+4. Sea conversacional, atractiva y ayude a fortalecer el recuerdo a largo plazo
 
-Return the result as JSON with this structure:
+Devuelve el resultado como JSON con esta estructura:
 {
-  "technique": "Name of the memory technique (e.g., 'Visual Association', 'Phonetic Link', 'Emotional Story')",
-  "explanation": "A brief 1-2 sentence explanation of why this association works",
-  "imagery": "A vivid, detailed mental image or scenario (2-3 sentences)",
-  "mnemonic": "Optional: A short memorable phrase or acronym if applicable"
+  "technique": "Nombre de la técnica de memoria (ej., 'Asociación Visual', 'Enlace Fonético', 'Historia Emocional')",
+  "explanation": "Una breve explicación de 1-2 oraciones de por qué funciona esta asociación",
+  "imagery": "Una imagen mental vívida y detallada o escenario (2-3 oraciones)",
+  "mnemonic": "Opcional: Una frase corta memorable o acrónimo si aplica"
 }`;
 
       const response = await window.spark.llm(promptText, 'gpt-4o', true);

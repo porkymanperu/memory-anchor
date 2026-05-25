@@ -36,25 +36,25 @@ export function MemoryItemDetail({ item, onBack }: MemoryItemDetailProps) {
       
       const categoryName = getCategoryName(item.categoryId);
       
-      const promptText = `You are a memory training assistant specializing in creating memorable associations.
+      const promptText = `Eres un asistente de entrenamiento de memoria especializado en crear asociaciones memorables.
 
-Create a memory association tip for remembering: "${answerValue}" in the category "${categoryName}"
+Crea un consejo de asociación de memoria para recordar: "${answerValue}" en la categoría "${categoryName}"
 
-The memory technique should use one of these approaches:
-- Visual imagery (vivid mental pictures)
-- Phonetic associations (sound-alike words)
-- Emotional connections (feelings or stories)
-- Physical object associations (concrete items)
-- Rhymes or wordplay
-- Story-based associations
+La técnica de memoria debe usar uno de estos enfoques:
+- Imágenes visuales (imágenes mentales vívidas)
+- Asociaciones fonéticas (palabras que suenan similar)
+- Conexiones emocionales (sentimientos o historias)
+- Asociaciones con objetos físicos (elementos concretos)
+- Rimas o juegos de palabras
+- Asociaciones basadas en historias
 
-Return ONLY a valid JSON object with this exact structure:
+Devuelve SOLO un objeto JSON válido con esta estructura exacta:
 {
-  "technique": "Brief technique name (e.g., 'Visual and Emotional Story', 'Phonetic Association', 'Object-Based Memory')",
-  "suggestion": "A creative, vivid, and memorable suggestion that helps reinforce recall. Make it conversational, specific, and easy to visualize. Focus on the mental image or scenario, not on explaining why it works."
+  "technique": "Nombre breve de la técnica (ej., 'Historia Visual y Emocional', 'Asociación Fonética', 'Memoria Basada en Objetos')",
+  "suggestion": "Una sugerencia creativa, vívida y memorable que ayude a reforzar el recuerdo. Hazla conversacional, específica y fácil de visualizar. Enfócate en la imagen mental o escenario, no en explicar por qué funciona."
 }
 
-Make the suggestion feel creative, memorable, and conversational. Keep it concise but impactful (2-4 sentences max).`;
+Haz que la sugerencia sea creativa, memorable y conversacional. Manténla concisa pero impactante (máximo 2-4 oraciones).`;
 
       const response = await window.spark.llm(promptText, 'gpt-4o', true);
       const result = JSON.parse(response) as MemoryTip;
