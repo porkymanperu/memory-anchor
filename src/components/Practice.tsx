@@ -191,6 +191,7 @@ Return the result as JSON with this structure:
   const finishSession = () => {
     const newProgress = updateStreak(userProgress);
     const totalTime = Date.now() - sessionStats.startTime;
+    const totalTimeSeconds = Math.round(totalTime / 1000);
     const averageTime = Math.round(totalTime / sessionItems.length / 1000);
     
     const now = new Date();
@@ -210,6 +211,7 @@ Return the result as JSON with this structure:
       questionsCorrect: sessionStats.correct,
       hintsUsed: sessionStats.hintsUsed,
       averageTime: averageTime,
+      totalTimeSeconds: totalTimeSeconds,
       itemsReviewed: sessionItems.map(item => item.id),
       questions: questionResults
     };
@@ -263,7 +265,7 @@ Return the result as JSON with this structure:
       accuracy,
       totalQuestions: sessionItems.length,
       correctAnswers: Math.round(sessionStats.correct),
-      timeSpent: Math.round(totalTime / 1000 / 60)
+      timeSpent: totalTimeSeconds
     });
     
     setViewMode('completed');
@@ -281,6 +283,12 @@ Return the result as JSON with this structure:
   }
 
   if (viewMode === 'completed' && completedSessionData) {
+    const minutes = Math.floor(completedSessionData.timeSpent / 60);
+    const seconds = completedSessionData.timeSpent % 60;
+    const timeDisplay = minutes > 0 
+      ? `${minutes} min ${seconds} sec`
+      : `${seconds} sec`;
+    
     return (
       <div className="min-h-screen bg-gradient-to-b from-primary/5 via-background to-accent/5 flex items-center justify-center px-4 pb-20">
         <motion.div
@@ -355,7 +363,7 @@ Return the result as JSON with this structure:
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Time Spent</p>
-                    <p className="text-xl font-bold">{completedSessionData.timeSpent} min</p>
+                    <p className="text-xl font-bold">{timeDisplay}</p>
                   </div>
                 </motion.div>
               </div>

@@ -66,6 +66,7 @@ export interface PracticeSession {
   questionsCorrect: number;
   hintsUsed: number;
   averageTime: number;
+  totalTimeSeconds?: number;
   itemsReviewed: string[];
   questions?: SessionQuestion[];
 }
