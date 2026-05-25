@@ -105,37 +105,28 @@ export function Library({ allItems, userProgress, setAllItems }: LibraryProps) {
       const categoryName = categories.find(c => c.id === newItemForm.categoryId)?.name || 'general topic';
       
       const contextType = newItemForm.answerType === 'multiple' 
-        ? 'multiple answers: ' + answerValue 
-        : 'answer: ' + answerValue;
+        ? 'múltiples respuestas: ' + answerValue 
+        : 'respuesta: ' + answerValue;
       
-      const promptText = `Eres un asistente de entrenamiento de memoria. Genera exactamente DOS pistas progresivas para recordar ${contextType} en la categoría "${categoryName}".
+      const promptText = `Eres un asistente de entrenamiento de memoria. Tu tarea es generar exactamente DOS pistas progresivas en español para ayudar a recordar ${contextType} en la categoría "${categoryName}".
 
-Las pistas deben:
-- Ser disparadores de memoria útiles sin revelar directamente la(s) respuesta(s)
-- Progresar de más sutil a más obvio
-- Ser concisas (1-2 oraciones cada una)
-- Ser apropiadas y comprensibles
-- Estar completamente en español
+Las pistas deben ser:
+- Disparadores de memoria útiles que NO revelen directamente la respuesta
+- Progresivas (la primera más sutil, la segunda más obvia)
+- Concisas (máximo 2 oraciones cada una)
+- Apropiadas y comprensibles
+- Completamente en español
 
-Devuelve SOLO un objeto JSON válido con esta estructura exacta:
+Responde ÚNICAMENTE con un objeto JSON válido con esta estructura:
 {
-  "hints": ["texto de pista 1", "texto de pista 2"],
+  "hints": ["Primera pista aquí", "Segunda pista aquí"],
   "valid": true
 }
 
-Si la respuesta no tiene sentido, es incoherente, inapropiada o no se puede entender, devuelve:
-{
-  "valid": false,
-  "message": "No se pueden generar pistas para esta respuesta"
-}`;
+Solo responde con el JSON, sin texto adicional.`;
 
       const response = await window.spark.llm(promptText, 'gpt-4o', true);
       const result = JSON.parse(response);
-      
-      if (result.valid === false) {
-        toast.error(result.message || 'Unable to generate hints for this answer. Please provide a clear, understandable answer.');
-        return;
-      }
       
       if (result.hints && Array.isArray(result.hints) && result.hints.length >= 2) {
         setNewItemForm({
@@ -143,9 +134,9 @@ Si la respuesta no tiene sentido, es incoherente, inapropiada o no se puede ente
           hint1: result.hints[0],
           hint2: result.hints[1]
         });
-        toast.success('Hints generated successfully!');
+        toast.success('¡Pistas generadas exitosamente!');
       } else {
-        toast.error('Unexpected response format. Please try again.');
+        toast.error('Formato de respuesta inesperado. Por favor intenta de nuevo.');
       }
     } catch (error) {
       console.error('Error generating hints:', error);
