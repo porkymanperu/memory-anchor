@@ -1,9 +1,9 @@
 import { useState, useMemo } from 'react';
-import { UserProgress, PracticeSession, CategoryId } from '@/lib/types';
+import { UserProgress, PracticeSession, CategoryId, CategoryGroup } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Clock, CheckCircle, XCircle, Lightbulb, Funnel, X, Calendar, Target, Trash } from '@phosphor-icons/react';
+import { Clock, CheckCircle, XCircle, Lightbulb, Funnel, X, Calendar, Target, Trash, StackSimple } from '@phosphor-icons/react';
 import { formatDate, getLocalDateString } from '@/lib/helpers';
 import { categories } from '@/lib/data';
 import { Badge } from '@/components/ui/badge';
@@ -15,6 +15,7 @@ import { Input } from '@/components/ui/input';
 import { SessionCalendar } from '@/components/SessionCalendar';
 import { isToday, parseISO, format } from 'date-fns';
 import { toast } from 'sonner';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface ProgressProps {
   userProgress: UserProgress;
@@ -30,6 +31,7 @@ export function Progress({ userProgress, setUserProgress }: ProgressProps) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showClearAllDialog, setShowClearAllDialog] = useState(false);
   const [sessionToDelete, setSessionToDelete] = useState<string | null>(null);
+  const [groupBy, setGroupBy] = useState<'none' | CategoryGroup>('none');
 
   const getCategoryName = (categoryId: string) => {
     return categories.find(c => c.id === categoryId)?.name || categoryId;
@@ -69,6 +71,32 @@ export function Progress({ userProgress, setUserProgress }: ProgressProps) {
 
     return filtered;
   }, [userProgress.sessions, selectedCategories, dateRange]);
+
+  const groupedSessions = useMemo(() => {
+    if (groupBy === 'none') {
+      return { none: filteredSessions };
+    }
+
+    const grouped: Record<string, PracticeSession[]> = {
+      entertainment: [],
+      places: [],
+      brands: []
+    };
+
+    filteredSessions.forEach(session => {
+      const sessionCategories = session.categoryIds.map(catId => 
+        categories.find(c => c.id === catId)
+      ).filter(Boolean);
+
+      const groups = new Set(sessionCategories.map(cat => cat!.group));
+
+      if (groups.has(groupBy)) {
+        grouped[groupBy].push(session);
+      }
+    });
+
+    return grouped;
+  }, [filteredSessions, groupBy]);
 
   const toggleCategory = (categoryId: CategoryId) => {
     setSelectedCategories(prev => 
@@ -285,6 +313,20 @@ export function Progress({ userProgress, setUserProgress }: ProgressProps) {
                     </CardDescription>
                   </div>
                   <div className="flex gap-2">
+                    <Select value={groupBy} onValueChange={(value) => setGroupBy(value as 'none' | CategoryGroup)}>
+                      <SelectTrigger className="w-[160px] h-9">
+                        <div className="flex items-center gap-2">
+                          <StackSimple size={16} />
+                          <SelectValue placeholder="Group by" />
+                        </div>
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">No Grouping</SelectItem>
+                        <SelectItem value="entertainment">Entertainment</SelectItem>
+                        <SelectItem value="places">Places</SelectItem>
+                        <SelectItem value="brands">Brands</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <Button
                       variant="outline"
                       size="sm"
@@ -430,7 +472,7 @@ export function Progress({ userProgress, setUserProgress }: ProgressProps) {
                     Clear filters
                   </Button>
                 </div>
-              ) : (
+              ) : groupBy === 'none' ? (
                 filteredSessions.slice(0, 10).map((session) => {
                   const sessionAccuracy = Math.round((session.questionsCorrect / session.questionsAsked) * 100);
                   return (
@@ -500,6 +542,102 @@ export function Progress({ userProgress, setUserProgress }: ProgressProps) {
                     </div>
                   );
                 })
+              ) : (
+                <div className="space-y-6">
+                  {groupedSessions[groupBy] && groupedSessions[groupBy].length > 0 ? (
+                    <>
+                      <div className="flex items-center gap-2 px-2">
+                        <StackSimple size={20} className="text-primary" weight="duotone" />
+                        <h3 className="text-lg font-semibold capitalize">{groupBy}</h3>
+                        <Badge variant="secondary" className="ml-auto">
+                          {groupedSessions[groupBy].length} {groupedSessions[groupBy].length === 1 ? 'session' : 'sessions'}
+                        </Badge>
+                      </div>
+                      <div className="space-y-3">
+                        {groupedSessions[groupBy].slice(0, 10).map((session) => {
+                          const sessionAccuracy = Math.round((session.questionsCorrect / session.questionsAsked) * 100);
+                          return (
+                            <div
+                              key={session.id}
+                              className="relative group"
+                            >
+                              <button
+                                onClick={() => setSelectedSession(session)}
+                                className="w-full text-left transition-all hover:scale-[1.02] active:scale-[0.98]"
+                              >
+                                <Card className="border-2 hover:border-primary/40 hover:bg-secondary/30">
+                                  <CardContent className="p-4">
+                                    <div className="flex items-start justify-between gap-4">
+                                      <div className="flex-1">
+                                        <div className="flex items-center gap-2 mb-2">
+                                          <p className="text-sm text-muted-foreground">
+                                            {formatDate(session.date)}
+                                          </p>
+                                          <span className="text-xs text-muted-foreground">•</span>
+                                          <p className="text-sm text-muted-foreground">
+                                            {session.questionsAsked} questions
+                                          </p>
+                                        </div>
+                                        <div className="flex flex-wrap gap-2 mb-2">
+                                          {session.categoryIds.map((catId) => (
+                                            <Badge key={catId} variant="secondary" className="text-xs">
+                                              {getCategoryName(catId)}
+                                            </Badge>
+                                          ))}
+                                        </div>
+                                        <div className="flex items-center gap-4 text-sm">
+                                          <div className="flex items-center gap-1">
+                                            <CheckCircle size={16} weight="fill" className="text-success" />
+                                            <span>{session.questionsCorrect} correct</span>
+                                          </div>
+                                          <div className="flex items-center gap-1">
+                                            <Clock size={16} weight="duotone" className="text-muted-foreground" />
+                                            <span>{session.averageTime}s avg</span>
+                                          </div>
+                                        </div>
+                                      </div>
+                                      <div className="flex-shrink-0 text-right">
+                                        <p className={`text-2xl font-bold ${
+                                          sessionAccuracy >= 80 ? 'text-success' : 
+                                          sessionAccuracy >= 60 ? 'text-accent' : 
+                                          'text-muted-foreground'
+                                        }`}>
+                                          {sessionAccuracy}%
+                                        </p>
+                                      </div>
+                                    </div>
+                                  </CardContent>
+                                </Card>
+                              </button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteSession(session.id);
+                                }}
+                                className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-background hover:bg-destructive hover:text-destructive-foreground shadow-md"
+                              >
+                                <Trash size={16} />
+                              </Button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-center py-8">
+                      <p className="text-muted-foreground">No {groupBy} sessions found</p>
+                      <Button
+                        variant="link"
+                        onClick={() => setGroupBy('none')}
+                        className="mt-2"
+                      >
+                        Show all sessions
+                      </Button>
+                    </div>
+                  )}
+                </div>
               )}
             </CardContent>
           </Card>
