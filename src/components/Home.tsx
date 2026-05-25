@@ -126,20 +126,43 @@ export function Home({ onStartPractice, userProgress }: HomeProps) {
                 <div className="flex items-center justify-between">
                   <span className="text-2xl font-bold text-primary">{questionCount}</span>
                   <span className="text-sm text-muted-foreground">
-                    {getQuestionRange(selectedDifficulty).min}-{getQuestionRange(selectedDifficulty).max} questions
+                    Range: {getQuestionRange(selectedDifficulty).min}-{getQuestionRange(selectedDifficulty).max}
                   </span>
                 </div>
-                <input
-                  type="range"
-                  min={getQuestionRange(selectedDifficulty).min}
-                  max={getQuestionRange(selectedDifficulty).max}
-                  value={questionCount}
-                  onChange={(e) => setQuestionCount(parseInt(e.target.value))}
-                  className="w-full h-2 bg-secondary rounded-lg appearance-none cursor-pointer accent-primary"
-                  style={{
-                    background: `linear-gradient(to right, hsl(var(--primary)) 0%, hsl(var(--primary)) ${((questionCount - getQuestionRange(selectedDifficulty).min) / (getQuestionRange(selectedDifficulty).max - getQuestionRange(selectedDifficulty).min)) * 100}%, hsl(var(--secondary)) ${((questionCount - getQuestionRange(selectedDifficulty).min) / (getQuestionRange(selectedDifficulty).max - getQuestionRange(selectedDifficulty).min)) * 100}%, hsl(var(--secondary)) 100%)`
-                  }}
-                />
+                <div className="relative pt-1">
+                  <input
+                    type="range"
+                    min={getQuestionRange(selectedDifficulty).min}
+                    max={getQuestionRange(selectedDifficulty).max}
+                    value={questionCount}
+                    onChange={(e) => setQuestionCount(parseInt(e.target.value))}
+                    className="w-full h-3 rounded-lg appearance-none cursor-pointer"
+                    style={{
+                      background: `linear-gradient(to right, oklch(0.45 0.15 275) 0%, oklch(0.45 0.15 275) ${((questionCount - getQuestionRange(selectedDifficulty).min) / (getQuestionRange(selectedDifficulty).max - getQuestionRange(selectedDifficulty).min)) * 100}%, oklch(0.82 0.08 285) ${((questionCount - getQuestionRange(selectedDifficulty).min) / (getQuestionRange(selectedDifficulty).max - getQuestionRange(selectedDifficulty).min)) * 100}%, oklch(0.82 0.08 285) 100%)`
+                    }}
+                  />
+                  <style>{`
+                    input[type="range"]::-webkit-slider-thumb {
+                      appearance: none;
+                      width: 20px;
+                      height: 20px;
+                      border-radius: 50%;
+                      background: white;
+                      border: 3px solid oklch(0.45 0.15 275);
+                      cursor: pointer;
+                      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+                    }
+                    input[type="range"]::-moz-range-thumb {
+                      width: 20px;
+                      height: 20px;
+                      border-radius: 50%;
+                      background: white;
+                      border: 3px solid oklch(0.45 0.15 275);
+                      cursor: pointer;
+                      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+                    }
+                  `}</style>
+                </div>
               </div>
             </div>
             {Object.entries(groupedCategories).map(([group, cats]) => (
