@@ -5,7 +5,7 @@ import { Practice } from './components/Practice';
 import { Library } from './components/Library';
 import { Progress } from './components/Progress';
 import { CategoryId, MemoryItem, UserProgress } from './lib/types';
-import { sampleMemoryItems } from './lib/data';
+import { sampleMemoryItems, DATA_VERSION } from './lib/data';
 import { Toaster } from './components/ui/sonner';
 
 type View = 'home' | 'practice' | 'library' | 'progress';
@@ -15,8 +15,8 @@ function App() {
   const [selectedCategories, setSelectedCategories] = useState<CategoryId[]>([]);
   const [selectedDifficulty, setSelectedDifficulty] = useState<'easy' | 'medium' | 'hard'>('easy');
   const [questionCount, setQuestionCount] = useState<number>(10);
-  const [migrated, setMigrated] = useState(false);
   
+  const [dataVersion, setDataVersion] = useKV<string>('data-version', '1.0');
   const [allItems, setAllItems] = useKV<MemoryItem[]>('memory-items', sampleMemoryItems);
   const [userProgress, setUserProgress] = useKV<UserProgress>('user-progress', {
     currentStreak: 0,
@@ -32,51 +32,13 @@ function App() {
   });
 
   useEffect(() => {
-    if (!migrated && allItems) {
-      let updatedItems = [...allItems];
-      let hasChanges = false;
-
-      const seenAnswers = new Map<string, Set<string>>();
-      const duplicateIds = new Set<string>();
-      
-      updatedItems.forEach(item => {
-        const key = item.categoryId.toLowerCase();
-        const answer = item.answer.toLowerCase().trim();
-        
-        if (!seenAnswers.has(key)) {
-          seenAnswers.set(key, new Set());
-        }
-        
-        const categoryAnswers = seenAnswers.get(key)!;
-        if (categoryAnswers.has(answer)) {
-          duplicateIds.add(item.id);
-          hasChanges = true;
-        } else {
-          categoryAnswers.add(answer);
-        }
-      });
-
-      if (duplicateIds.size > 0) {
-        updatedItems = updatedItems.filter(item => !duplicateIds.has(item.id));
-      }
-
-      if (updatedItems.length < 100) {
-        const nonCustomIds = new Set(updatedItems.filter(item => !item.isCustom).map(item => item.id));
-        const missingSampleItems = sampleMemoryItems.filter(item => !nonCustomIds.has(item.id));
-        
-        if (missingSampleItems.length > 0) {
-          updatedItems = [...updatedItems, ...missingSampleItems];
-          hasChanges = true;
-        }
-      }
-
-      if (hasChanges) {
-        setAllItems(updatedItems);
-      }
-      
-      setMigrated(true);
+    if (dataVersion !== DATA_VERSION) {
+      const customItems = allItems?.filter(item => item.isCustom) || [];
+      const newItems = [...sampleMemoryItems, ...customItems];
+      setAllItems(newItems);
+      setDataVersion(DATA_VERSION);
     }
-  }, [migrated, allItems, setAllItems]);
+  }, [dataVersion, allItems, setAllItems, setDataVersion]);
 
   const startPractice = (categories: CategoryId[], difficulty: 'easy' | 'medium' | 'hard' = 'easy', count?: number) => {
     setSelectedCategories(categories);
