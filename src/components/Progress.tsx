@@ -530,23 +530,11 @@ export function Progress({ userProgress, setUserProgress }: ProgressProps) {
             return (
               <>
                 <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-3 flex-shrink-0 border-b">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1">
-                      <DialogTitle className="text-lg sm:text-xl">Session Details</DialogTitle>
-                      <DialogDescription className="text-sm">
-                        {formatDate(selectedSession.date)}
-                      </DialogDescription>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => {
-                        handleDeleteSession(selectedSession.id);
-                      }}
-                      className="hover:bg-destructive hover:text-destructive-foreground"
-                    >
-                      <Trash size={18} />
-                    </Button>
+                  <div className="flex-1">
+                    <DialogTitle className="text-lg sm:text-xl">Session Details</DialogTitle>
+                    <DialogDescription className="text-sm">
+                      {formatDate(selectedSession.date)}
+                    </DialogDescription>
                   </div>
                 </DialogHeader>
                 
