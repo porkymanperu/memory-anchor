@@ -141,6 +141,15 @@ export function selectQuestionsWithSpacedRepetition(
     return perf.recallStrength < 40 || perf.consecutiveFails > 0;
   });
   
+  const recentlyAnsweredCorrectly = seenItems.filter(item => {
+    const perf = performances.get(item.id)!;
+    return (
+      perf.sessionsSinceLastSeen < 2 &&
+      perf.consecutiveFails === 0 &&
+      perf.lastSeen !== null
+    );
+  });
+  
   const needsReviewItems = seenItems.filter(item => {
     const perf = performances.get(item.id)!;
     return (
@@ -221,8 +230,9 @@ export function selectQuestionsWithSpacedRepetition(
   ];
   
   if (allSelected.length < targetCount) {
+    const recentlyAnsweredIds = new Set(recentlyAnsweredCorrectly.map(item => item.id));
     const remaining = seenItems.filter(
-      item => !allSelected.find(s => s.id === item.id)
+      item => !allSelected.find(s => s.id === item.id) && !recentlyAnsweredIds.has(item.id)
     );
     const needed = targetCount - allSelected.length;
     const additional = shuffleArray(remaining).slice(0, needed);
