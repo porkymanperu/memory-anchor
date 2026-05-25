@@ -108,24 +108,25 @@ export function Library({ allItems, userProgress, setAllItems }: LibraryProps) {
         ? 'multiple answers: ' + answerValue 
         : 'answer: ' + answerValue;
       
-      const promptText = `You are a memory training assistant. Generate exactly TWO progressive hints for remembering the ${contextType} in the category "${categoryName}".
+      const promptText = `Eres un asistente de entrenamiento de memoria. Genera exactamente DOS pistas progresivas para recordar ${contextType} en la categoría "${categoryName}".
 
-The hints should:
-- Be helpful memory triggers without giving away the answer(s) directly
-- Progress from more subtle to more obvious
-- Be concise (1-2 sentences each)
-- Be appropriate and understandable
+Las pistas deben:
+- Ser disparadores de memoria útiles sin revelar directamente la(s) respuesta(s)
+- Progresar de más sutil a más obvio
+- Ser concisas (1-2 oraciones cada una)
+- Ser apropiadas y comprensibles
+- Estar completamente en español
 
-Return ONLY a valid JSON object with this exact structure:
+Devuelve SOLO un objeto JSON válido con esta estructura exacta:
 {
-  "hints": ["hint 1 text", "hint 2 text"],
+  "hints": ["texto de pista 1", "texto de pista 2"],
   "valid": true
 }
 
-If the answer is nonsensical, gibberish, inappropriate, or cannot be understood, return:
+Si la respuesta no tiene sentido, es incoherente, inapropiada o no se puede entender, devuelve:
 {
   "valid": false,
-  "message": "Unable to generate hints for this answer"
+  "message": "No se pueden generar pistas para esta respuesta"
 }`;
 
       const response = await window.spark.llm(promptText, 'gpt-4o', true);
