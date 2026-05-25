@@ -207,7 +207,7 @@ Haz que la sugerencia sea creativa, memorable y conversacional. Manténla concis
                       {memoryTip.technique}
                     </h4>
                   </div>
-                  <p className="text-base leading-relaxed text-foreground/90 font-secondary italic">
+                  <p className="text-base leading-relaxed text-foreground/90">
                     {memoryTip.suggestion}
                   </p>
                 </motion.div>
