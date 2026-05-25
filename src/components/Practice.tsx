@@ -187,9 +187,15 @@ Return the result as JSON with this structure:
     const totalTime = Date.now() - sessionStats.startTime;
     const averageTime = Math.round(totalTime / sessionItems.length / 1000);
     
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    const localDateString = `${year}-${month}-${day}T${String(today.getHours()).padStart(2, '0')}:${String(today.getMinutes()).padStart(2, '0')}:${String(today.getSeconds()).padStart(2, '0')}`;
+    
     const newSession = {
       id: Date.now().toString(),
-      date: new Date().toISOString(),
+      date: localDateString,
       categoryIds: selectedCategories,
       questionsAsked: sessionItems.length,
       questionsCorrect: sessionStats.correct,

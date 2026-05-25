@@ -65,9 +65,13 @@ export function isStreakActive(lastPracticeDate: string): boolean {
 }
 
 export function updateStreak(progress: UserProgress): UserProgress {
-  const today = new Date().toISOString().split('T')[0];
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  const todayString = `${year}-${month}-${day}`;
   
-  if (progress.lastPracticeDate === today) {
+  if (progress.lastPracticeDate === todayString) {
     return progress;
   }
   
@@ -80,7 +84,7 @@ export function updateStreak(progress: UserProgress): UserProgress {
       progress.longestStreak,
       streakActive ? progress.currentStreak + 1 : 1
     ),
-    lastPracticeDate: today
+    lastPracticeDate: todayString
   };
 }
 
