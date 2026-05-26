@@ -149,6 +149,7 @@ export interface GoalTemplate {
 export interface UserGoal {
   id: string;
   templateId: string;
+  customName?: string;
   startDate: string;
   status: GoalStatus;
   configuration: {

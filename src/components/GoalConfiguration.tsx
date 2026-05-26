@@ -20,6 +20,7 @@ export function GoalConfiguration({ templateId, onSave, onCancel }: GoalConfigur
     return <div>Template not found</div>;
   }
 
+  const [customName, setCustomName] = useState(template.name);
   const [configuration, setConfiguration] = useState({
     difficultyLevel: template.defaultValues.difficultyLevel,
     categoryId: template.defaultValues.categoryId,
@@ -121,6 +122,7 @@ export function GoalConfiguration({ templateId, onSave, onCancel }: GoalConfigur
     const goal: UserGoal = {
       id: `goal-${Date.now()}`,
       templateId: template.id,
+      customName: customName !== template.name ? customName : undefined,
       startDate: new Date().toISOString(),
       status: 'not-started',
       configuration: {
@@ -141,6 +143,20 @@ export function GoalConfiguration({ templateId, onSave, onCancel }: GoalConfigur
       <div>
         <h4 className="font-medium mb-1">{template.name}</h4>
         <p className="text-sm text-muted-foreground">{template.description}</p>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="goal-name">Nombre de la Meta</Label>
+        <Input
+          id="goal-name"
+          type="text"
+          value={customName}
+          onChange={(e) => setCustomName(e.target.value)}
+          placeholder={template.name}
+        />
+        <p className="text-xs text-muted-foreground">
+          Personaliza el nombre de tu meta o deja el predeterminado
+        </p>
       </div>
 
       {template.configurableFields.difficultyLevel && (

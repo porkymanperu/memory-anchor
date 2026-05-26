@@ -165,6 +165,8 @@ export function Goals({ userProgress }: GoalsProps) {
                 const template = goalTemplates.find((t) => t.id === goal.templateId);
                 if (!template) return null;
 
+                const displayName = goal.customName || template.name;
+
                 return (
                   <Card key={goal.id} className="p-4">
                     <div className="flex items-start justify-between mb-3">
@@ -173,7 +175,7 @@ export function Goals({ userProgress }: GoalsProps) {
                           {getCategoryIcon(template.category)}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-foreground">{template.name}</h3>
+                          <h3 className="font-semibold text-foreground">{displayName}</h3>
                           <p className="text-sm text-muted-foreground mt-1">
                             {template.description}
                           </p>
@@ -224,6 +226,8 @@ export function Goals({ userProgress }: GoalsProps) {
                 const template = goalTemplates.find((t) => t.id === goal.templateId);
                 if (!template) return null;
 
+                const displayName = goal.customName || template.name;
+
                 return (
                   <Card key={goal.id} className="p-4 border-success/20 bg-success/5">
                     <div className="flex items-start justify-between mb-3">
@@ -232,7 +236,7 @@ export function Goals({ userProgress }: GoalsProps) {
                           <Check size={20} weight="duotone" className="text-success" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-foreground">{template.name}</h3>
+                          <h3 className="font-semibold text-foreground">{displayName}</h3>
                           <p className="text-sm text-muted-foreground mt-1">
                             {template.description}
                           </p>
