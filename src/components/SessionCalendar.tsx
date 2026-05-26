@@ -34,7 +34,8 @@ export function SessionCalendar({ sessions, onDateClick }: SessionCalendarProps)
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
     
-    const startPadding = firstDay.getDay();
+    const firstDayOfWeek = firstDay.getDay();
+    const startPadding = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1;
     const daysInMonth = lastDay.getDate();
     
     const days: Array<{
@@ -145,13 +146,13 @@ export function SessionCalendar({ sessions, onDateClick }: SessionCalendarProps)
       <CardContent>
         <div className="space-y-3">
           <div className="grid grid-cols-7 gap-2 text-center text-xs font-semibold text-muted-foreground mb-2">
-            <div>Sun</div>
-            <div>Mon</div>
-            <div>Tue</div>
-            <div>Wed</div>
-            <div>Thu</div>
-            <div>Fri</div>
-            <div>Sat</div>
+            <div>Lun</div>
+            <div>Mar</div>
+            <div>Mié</div>
+            <div>Jue</div>
+            <div>Vie</div>
+            <div>Sáb</div>
+            <div>Dom</div>
           </div>
           
           <div className="grid grid-cols-7 gap-2">

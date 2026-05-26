@@ -189,6 +189,8 @@ export function GoalConfiguration({ templateId, onSave, onCancel }: GoalConfigur
               onSelect={setScheduledStartDate}
               disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
               initialFocus
+              locale={es}
+              weekStartsOn={1}
             />
           </PopoverContent>
         </Popover>
