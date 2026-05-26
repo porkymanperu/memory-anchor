@@ -7,6 +7,16 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Target, TrendUp, Lightning, Plus, Check, Clock, X } from '@phosphor-icons/react';
 import { GoalTemplateSelector } from './GoalTemplateSelector';
 import { GoalConfiguration } from './GoalConfiguration';
@@ -22,6 +32,7 @@ export function Goals({ userProgress }: GoalsProps) {
   const [showConfiguration, setShowConfiguration] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
   const [selectedGoal, setSelectedGoal] = useState<UserGoal | null>(null);
+  const [goalToDelete, setGoalToDelete] = useState<string | null>(null);
 
   useEffect(() => {
     if (userGoals && userGoals.length > 0) {
@@ -55,7 +66,12 @@ export function Goals({ userProgress }: GoalsProps) {
 
   const handleDeleteGoal = (goalId: string) => {
     setUserGoals((current) => (current || []).filter((g) => g.id !== goalId));
+    setGoalToDelete(null);
     toast.success('Meta eliminada');
+  };
+
+  const confirmDeleteGoal = (goalId: string) => {
+    setGoalToDelete(goalId);
   };
 
   const activeGoals = (userGoals || []).filter(
@@ -166,7 +182,7 @@ export function Goals({ userProgress }: GoalsProps) {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleDeleteGoal(goal.id)}
+                        onClick={() => confirmDeleteGoal(goal.id)}
                         className="flex-shrink-0"
                       >
                         <X size={16} />
@@ -225,7 +241,7 @@ export function Goals({ userProgress }: GoalsProps) {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleDeleteGoal(goal.id)}
+                        onClick={() => confirmDeleteGoal(goal.id)}
                         className="flex-shrink-0"
                       >
                         <X size={16} />
@@ -270,6 +286,28 @@ export function Goals({ userProgress }: GoalsProps) {
           </DialogContent>
         </Dialog>
       )}
+
+      <AlertDialog open={!!goalToDelete} onOpenChange={(open) => !open && setGoalToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar meta?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. La meta será eliminada permanentemente de tu lista.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setGoalToDelete(null)}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => goalToDelete && handleDeleteGoal(goalToDelete)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
