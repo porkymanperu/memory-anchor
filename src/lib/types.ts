@@ -108,3 +108,62 @@ export interface PracticeState {
     startTime: number;
   };
 }
+
+export type GoalCategory = 'consistency' | 'accuracy' | 'speed';
+
+export type GoalStatus = 'not-started' | 'in-progress' | 'achieved' | 'missed';
+
+export interface GoalTemplate {
+  id: string;
+  name: string;
+  description: string;
+  category: GoalCategory;
+  configurableFields: {
+    difficultyLevel?: boolean;
+    categoryId?: boolean;
+    numberOfDays?: boolean;
+    accuracyPercentage?: boolean;
+    sessionDuration?: boolean;
+    improvementPercentage?: boolean;
+  };
+  defaultValues: {
+    difficultyLevel?: 'easy' | 'medium' | 'hard';
+    categoryId?: CategoryId;
+    numberOfDays?: number;
+    accuracyPercentage?: number;
+    sessionDuration?: number;
+    improvementPercentage?: number;
+  };
+  validationRules: {
+    minDays?: number;
+    maxDays?: number;
+    minAccuracy?: number;
+    maxAccuracy?: number;
+    minDuration?: number;
+    maxDuration?: number;
+    minImprovement?: number;
+    maxImprovement?: number;
+  };
+}
+
+export interface UserGoal {
+  id: string;
+  templateId: string;
+  startDate: string;
+  status: GoalStatus;
+  configuration: {
+    difficultyLevel?: 'easy' | 'medium' | 'hard';
+    categoryId?: CategoryId;
+    numberOfDays?: number;
+    accuracyPercentage?: number;
+    sessionDuration?: number;
+    improvementPercentage?: number;
+  };
+  progress: {
+    currentValue: number;
+    targetValue: number;
+    percentage: number;
+  };
+  achievedDate?: string;
+  missedDate?: string;
+}
