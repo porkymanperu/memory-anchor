@@ -182,14 +182,13 @@ export function GoalConfiguration({ templateId, onSave, onCancel }: GoalConfigur
               )}
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
+          <PopoverContent className="w-auto p-0 z-50" align="start">
             <Calendar
               mode="single"
               selected={scheduledStartDate}
               onSelect={setScheduledStartDate}
               disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
               initialFocus
-              locale={es}
             />
           </PopoverContent>
         </Popover>
