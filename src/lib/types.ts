@@ -62,6 +62,7 @@ export interface PracticeSession {
   id: string;
   date: string;
   categoryIds: CategoryId[];
+  difficulty?: 'easy' | 'medium' | 'hard';
   questionsAsked: number;
   questionsCorrect: number;
   hintsUsed: number;

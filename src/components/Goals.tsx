@@ -169,6 +169,12 @@ export function Goals({ userProgress }: GoalsProps) {
 
                 const displayName = goal.customName || template.name;
 
+                const difficultyLabels = {
+                  easy: 'Fácil',
+                  medium: 'Medio',
+                  hard: 'Difícil',
+                };
+
                 return (
                   <Card key={goal.id} className="p-4">
                     <div className="flex items-start justify-between mb-3">
@@ -181,6 +187,13 @@ export function Goals({ userProgress }: GoalsProps) {
                           <p className="text-sm text-muted-foreground mt-1">
                             {template.description}
                           </p>
+                          {goal.configuration.difficultyLevel && (
+                            <div className="flex items-center gap-2 mt-2">
+                              <span className="text-xs px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground font-medium">
+                                {difficultyLabels[goal.configuration.difficultyLevel]}
+                              </span>
+                            </div>
+                          )}
                           {goal.scheduledStartDate && new Date(goal.scheduledStartDate) > new Date() && (
                             <p className="text-xs text-accent mt-2 flex items-center gap-1">
                               <CalendarBlank size={14} />
@@ -236,6 +249,12 @@ export function Goals({ userProgress }: GoalsProps) {
 
                 const displayName = goal.customName || template.name;
 
+                const difficultyLabels = {
+                  easy: 'Fácil',
+                  medium: 'Medio',
+                  hard: 'Difícil',
+                };
+
                 return (
                   <Card key={goal.id} className="p-4 border-success/20 bg-success/5">
                     <div className="flex items-start justify-between mb-3">
@@ -248,6 +267,13 @@ export function Goals({ userProgress }: GoalsProps) {
                           <p className="text-sm text-muted-foreground mt-1">
                             {template.description}
                           </p>
+                          {goal.configuration.difficultyLevel && (
+                            <div className="flex items-center gap-2 mt-2">
+                              <span className="text-xs px-2 py-0.5 rounded-full bg-success/20 text-success font-medium">
+                                {difficultyLabels[goal.configuration.difficultyLevel]}
+                              </span>
+                            </div>
+                          )}
                         </div>
                       </div>
                       <Button

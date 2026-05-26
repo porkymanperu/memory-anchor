@@ -3,10 +3,11 @@ import { GoalTemplate } from './types';
 export const goalTemplates: GoalTemplate[] = [
   {
     id: 'consistency-easy-7days',
-    name: 'Racha de 7 Días - Modo Fácil',
-    description: 'Completa sesiones en modo Fácil durante 7 días consecutivos',
+    name: 'Racha de Días Consecutivos',
+    description: 'Completa sesiones durante días consecutivos en el nivel de dificultad que prefieras',
     category: 'consistency',
     configurableFields: {
+      difficultyLevel: true,
       numberOfDays: true,
     },
     defaultValues: {
@@ -20,10 +21,11 @@ export const goalTemplates: GoalTemplate[] = [
   },
   {
     id: 'consistency-medium-14days',
-    name: 'Racha de 14 Días - Modo Medio',
-    description: 'Completa sesiones en modo Medio durante 14 días consecutivos',
+    name: 'Racha Extendida',
+    description: 'Completa sesiones durante más días consecutivos con el nivel de dificultad que elijas',
     category: 'consistency',
     configurableFields: {
+      difficultyLevel: true,
       numberOfDays: true,
     },
     defaultValues: {
@@ -37,10 +39,11 @@ export const goalTemplates: GoalTemplate[] = [
   },
   {
     id: 'consistency-hard-7days',
-    name: 'Racha de 7 Días - Modo Difícil',
-    description: 'Completa sesiones en modo Difícil durante 7 días consecutivos',
+    name: 'Racha Desafiante',
+    description: 'Completa sesiones durante días consecutivos con tu nivel de dificultad preferido',
     category: 'consistency',
     configurableFields: {
+      difficultyLevel: true,
       numberOfDays: true,
     },
     defaultValues: {
@@ -55,12 +58,14 @@ export const goalTemplates: GoalTemplate[] = [
   {
     id: 'consistency-weekly-sessions',
     name: 'Práctica Semanal',
-    description: 'Completa al menos 5 sesiones esta semana',
+    description: 'Completa varias sesiones esta semana con cualquier nivel de dificultad',
     category: 'consistency',
     configurableFields: {
+      difficultyLevel: true,
       numberOfDays: true,
     },
     defaultValues: {
+      difficultyLevel: 'easy',
       numberOfDays: 5,
     },
     validationRules: {
@@ -70,10 +75,11 @@ export const goalTemplates: GoalTemplate[] = [
   },
   {
     id: 'accuracy-easy-80',
-    name: 'Precisión del 80% - Modo Fácil',
-    description: 'Alcanza 80% de precisión en una sesión en modo Fácil',
+    name: 'Alta Precisión',
+    description: 'Alcanza un porcentaje de precisión en una sesión con tu nivel de dificultad',
     category: 'accuracy',
     configurableFields: {
+      difficultyLevel: true,
       accuracyPercentage: true,
     },
     defaultValues: {
@@ -87,10 +93,11 @@ export const goalTemplates: GoalTemplate[] = [
   },
   {
     id: 'accuracy-medium-75',
-    name: 'Precisión del 75% - Modo Medio',
-    description: 'Alcanza 75% de precisión en una sesión en modo Medio',
+    name: 'Precisión Consistente',
+    description: 'Alcanza un porcentaje de precisión en tu nivel de dificultad preferido',
     category: 'accuracy',
     configurableFields: {
+      difficultyLevel: true,
       accuracyPercentage: true,
     },
     defaultValues: {
@@ -104,10 +111,11 @@ export const goalTemplates: GoalTemplate[] = [
   },
   {
     id: 'accuracy-hard-70',
-    name: 'Precisión del 70% - Modo Difícil',
-    description: 'Alcanza 70% de precisión en una sesión en modo Difícil',
+    name: 'Precisión Desafiante',
+    description: 'Alcanza un buen porcentaje de precisión con el nivel de dificultad que elijas',
     category: 'accuracy',
     configurableFields: {
+      difficultyLevel: true,
       accuracyPercentage: true,
     },
     defaultValues: {
@@ -122,13 +130,15 @@ export const goalTemplates: GoalTemplate[] = [
   {
     id: 'accuracy-category',
     name: 'Precisión por Categoría',
-    description: 'Alcanza una precisión específica en una categoría',
+    description: 'Alcanza una precisión específica en una categoría con cualquier nivel de dificultad',
     category: 'accuracy',
     configurableFields: {
+      difficultyLevel: true,
       categoryId: true,
       accuracyPercentage: true,
     },
     defaultValues: {
+      difficultyLevel: 'easy',
       accuracyPercentage: 85,
     },
     validationRules: {
@@ -139,7 +149,7 @@ export const goalTemplates: GoalTemplate[] = [
   {
     id: 'accuracy-perfect-session',
     name: 'Sesión Perfecta',
-    description: 'Completa una sesión con 100% de precisión',
+    description: 'Completa una sesión con 100% de precisión en tu nivel de dificultad',
     category: 'accuracy',
     configurableFields: {
       difficultyLevel: true,
@@ -155,13 +165,15 @@ export const goalTemplates: GoalTemplate[] = [
   },
   {
     id: 'speed-session-under-5min',
-    name: 'Sesión Rápida - Menos de 5 Minutos',
-    description: 'Completa una sesión en menos de 5 minutos',
+    name: 'Sesión Rápida Corta',
+    description: 'Completa una sesión en menos de cierto tiempo con cualquier nivel de dificultad',
     category: 'speed',
     configurableFields: {
+      difficultyLevel: true,
       sessionDuration: true,
     },
     defaultValues: {
+      difficultyLevel: 'easy',
       sessionDuration: 5,
     },
     validationRules: {
@@ -171,13 +183,15 @@ export const goalTemplates: GoalTemplate[] = [
   },
   {
     id: 'speed-session-under-8min',
-    name: 'Sesión Rápida - Menos de 8 Minutos',
-    description: 'Completa una sesión en menos de 8 minutos',
+    name: 'Sesión Rápida',
+    description: 'Completa una sesión en un tiempo específico con tu nivel de dificultad preferido',
     category: 'speed',
     configurableFields: {
+      difficultyLevel: true,
       sessionDuration: true,
     },
     defaultValues: {
+      difficultyLevel: 'easy',
       sessionDuration: 8,
     },
     validationRules: {
@@ -188,12 +202,14 @@ export const goalTemplates: GoalTemplate[] = [
   {
     id: 'speed-improvement',
     name: 'Mejora de Velocidad',
-    description: 'Reduce tu tiempo promedio de sesión en un porcentaje',
+    description: 'Reduce tu tiempo promedio de sesión en un porcentaje con cualquier nivel de dificultad',
     category: 'speed',
     configurableFields: {
+      difficultyLevel: true,
       improvementPercentage: true,
     },
     defaultValues: {
+      difficultyLevel: 'easy',
       improvementPercentage: 20,
     },
     validationRules: {

@@ -45,8 +45,7 @@ function validateConsistencyGoal(
     const isAfterStart = isAfter(sessionDate, effectiveStartDate) || sessionDate.getTime() === effectiveStartDate.getTime();
 
     if (difficultyLevel) {
-      const sessionDifficulty = getSessionDifficulty(session);
-      return isAfterStart && sessionDifficulty === difficultyLevel;
+      return isAfterStart && session.difficulty === difficultyLevel;
     }
     return isAfterStart;
   });
@@ -96,8 +95,7 @@ function validateAccuracyGoal(
     let matchesCriteria = isAfterStart;
 
     if (difficultyLevel) {
-      const sessionDifficulty = getSessionDifficulty(session);
-      matchesCriteria = matchesCriteria && sessionDifficulty === difficultyLevel;
+      matchesCriteria = matchesCriteria && session.difficulty === difficultyLevel;
     }
 
     if (categoryId) {
@@ -219,13 +217,6 @@ function validateSpeedGoal(
   }
 
   return { currentValue: 0, targetValue: 100, percentage: 0, isAchieved: false };
-}
-
-function getSessionDifficulty(session: any): 'easy' | 'medium' | 'hard' {
-  const questionCount = session.questionsAsked;
-  if (questionCount >= 20) return 'hard';
-  if (questionCount >= 15) return 'medium';
-  return 'easy';
 }
 
 function calculateAverageSessionTime(sessions: any[]): number {

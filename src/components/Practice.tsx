@@ -207,6 +207,7 @@ Devuelve el resultado como JSON con esta estructura:
       id: Date.now().toString(),
       date: localDateString,
       categoryIds: selectedCategories,
+      difficulty: selectedDifficulty,
       questionsAsked: sessionItems.length,
       questionsCorrect: sessionStats.correct,
       hintsUsed: sessionStats.hintsUsed,

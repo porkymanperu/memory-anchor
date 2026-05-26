@@ -166,6 +166,30 @@ export function GoalConfiguration({ templateId, onSave, onCancel }: GoalConfigur
         </p>
       </div>
 
+      {template.configurableFields.difficultyLevel && (
+        <div className="space-y-2">
+          <Label htmlFor="difficulty">Nivel de Dificultad</Label>
+          <Select
+            value={configuration.difficultyLevel || 'easy'}
+            onValueChange={(value) =>
+              setConfiguration({ ...configuration, difficultyLevel: value as any })
+            }
+          >
+            <SelectTrigger id="difficulty">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="easy">Fácil</SelectItem>
+              <SelectItem value="medium">Medio</SelectItem>
+              <SelectItem value="hard">Difícil</SelectItem>
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground">
+            Selecciona el nivel de dificultad al que se aplicará esta meta
+          </p>
+        </div>
+      )}
+
       <div className="space-y-2">
         <Label>Programar Inicio (Opcional)</Label>
         <Popover>
@@ -198,27 +222,6 @@ export function GoalConfiguration({ templateId, onSave, onCancel }: GoalConfigur
           Selecciona cuándo quieres que comience esta meta. Si no seleccionas una fecha, comenzará hoy.
         </p>
       </div>
-
-      {template.configurableFields.difficultyLevel && (
-        <div className="space-y-2">
-          <Label htmlFor="difficulty">Nivel de Dificultad</Label>
-          <Select
-            value={configuration.difficultyLevel || 'easy'}
-            onValueChange={(value) =>
-              setConfiguration({ ...configuration, difficultyLevel: value as any })
-            }
-          >
-            <SelectTrigger id="difficulty">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="easy">Fácil</SelectItem>
-              <SelectItem value="medium">Medio</SelectItem>
-              <SelectItem value="hard">Difícil</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      )}
 
       {template.configurableFields.categoryId && (
         <div className="space-y-2">
