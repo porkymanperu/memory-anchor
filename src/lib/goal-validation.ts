@@ -26,11 +26,23 @@ function validateConsistencyGoal(
 ): { currentValue: number; targetValue: number; percentage: number; isAchieved: boolean } {
   const targetDays = goal.configuration.numberOfDays || 7;
   const difficultyLevel = goal.configuration.difficultyLevel;
-  const goalStartDate = startOfDay(parseISO(goal.startDate));
+  
+  const effectiveStartDate = goal.scheduledStartDate 
+    ? startOfDay(parseISO(goal.scheduledStartDate))
+    : startOfDay(parseISO(goal.startDate));
+  
+  if (isAfter(effectiveStartDate, startOfDay(new Date()))) {
+    return {
+      currentValue: 0,
+      targetValue: targetDays,
+      percentage: 0,
+      isAchieved: false,
+    };
+  }
 
   const relevantSessions = userProgress.sessions.filter((session) => {
     const sessionDate = startOfDay(parseISO(session.date));
-    const isAfterStart = isAfter(sessionDate, goalStartDate) || sessionDate.getTime() === goalStartDate.getTime();
+    const isAfterStart = isAfter(sessionDate, effectiveStartDate) || sessionDate.getTime() === effectiveStartDate.getTime();
 
     if (difficultyLevel) {
       const sessionDifficulty = getSessionDifficulty(session);
@@ -63,11 +75,23 @@ function validateAccuracyGoal(
   const targetAccuracy = goal.configuration.accuracyPercentage || 80;
   const difficultyLevel = goal.configuration.difficultyLevel;
   const categoryId = goal.configuration.categoryId;
-  const goalStartDate = startOfDay(parseISO(goal.startDate));
+  
+  const effectiveStartDate = goal.scheduledStartDate 
+    ? startOfDay(parseISO(goal.scheduledStartDate))
+    : startOfDay(parseISO(goal.startDate));
+  
+  if (isAfter(effectiveStartDate, startOfDay(new Date()))) {
+    return {
+      currentValue: 0,
+      targetValue: targetAccuracy,
+      percentage: 0,
+      isAchieved: false,
+    };
+  }
 
   const relevantSessions = userProgress.sessions.filter((session) => {
     const sessionDate = startOfDay(parseISO(session.date));
-    const isAfterStart = isAfter(sessionDate, goalStartDate) || sessionDate.getTime() === goalStartDate.getTime();
+    const isAfterStart = isAfter(sessionDate, effectiveStartDate) || sessionDate.getTime() === effectiveStartDate.getTime();
 
     let matchesCriteria = isAfterStart;
 
@@ -109,11 +133,31 @@ function validateSpeedGoal(
   template: GoalTemplate,
   userProgress: UserProgress
 ): { currentValue: number; targetValue: number; percentage: number; isAchieved: boolean } {
-  const goalStartDate = startOfDay(parseISO(goal.startDate));
+  const effectiveStartDate = goal.scheduledStartDate 
+    ? startOfDay(parseISO(goal.scheduledStartDate))
+    : startOfDay(parseISO(goal.startDate));
+  
+  if (isAfter(effectiveStartDate, startOfDay(new Date()))) {
+    if (goal.configuration.sessionDuration !== undefined) {
+      return {
+        currentValue: 0,
+        targetValue: goal.configuration.sessionDuration,
+        percentage: 0,
+        isAchieved: false,
+      };
+    } else {
+      return {
+        currentValue: 0,
+        targetValue: goal.configuration.improvementPercentage || 0,
+        percentage: 0,
+        isAchieved: false,
+      };
+    }
+  }
 
   const relevantSessions = userProgress.sessions.filter((session) => {
     const sessionDate = startOfDay(parseISO(session.date));
-    return isAfter(sessionDate, goalStartDate) || sessionDate.getTime() === goalStartDate.getTime();
+    return isAfter(sessionDate, effectiveStartDate) || sessionDate.getTime() === effectiveStartDate.getTime();
   });
 
   if (goal.configuration.sessionDuration !== undefined) {
@@ -148,7 +192,7 @@ function validateSpeedGoal(
 
     const sessionsBeforeGoal = userProgress.sessions.filter((session) => {
       const sessionDate = startOfDay(parseISO(session.date));
-      return isBefore(sessionDate, goalStartDate);
+      return isBefore(sessionDate, effectiveStartDate);
     });
 
     if (sessionsBeforeGoal.length === 0 || relevantSessions.length === 0) {

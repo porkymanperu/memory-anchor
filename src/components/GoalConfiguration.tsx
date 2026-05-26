@@ -6,6 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { CalendarBlank } from '@phosphor-icons/react';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 interface GoalConfigurationProps {
   templateId: string;
@@ -21,6 +26,7 @@ export function GoalConfiguration({ templateId, onSave, onCancel }: GoalConfigur
   }
 
   const [customName, setCustomName] = useState(template.name);
+  const [scheduledStartDate, setScheduledStartDate] = useState<Date>();
   const [configuration, setConfiguration] = useState({
     difficultyLevel: template.defaultValues.difficultyLevel,
     categoryId: template.defaultValues.categoryId,
@@ -124,6 +130,7 @@ export function GoalConfiguration({ templateId, onSave, onCancel }: GoalConfigur
       templateId: template.id,
       customName: customName !== template.name ? customName : undefined,
       startDate: new Date().toISOString(),
+      scheduledStartDate: scheduledStartDate?.toISOString(),
       status: 'not-started',
       configuration: {
         ...configuration,
@@ -156,6 +163,38 @@ export function GoalConfiguration({ templateId, onSave, onCancel }: GoalConfigur
         />
         <p className="text-xs text-muted-foreground">
           Personaliza el nombre de tu meta o deja el predeterminado
+        </p>
+      </div>
+
+      <div className="space-y-2">
+        <Label>Programar Inicio (Opcional)</Label>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              className="w-full justify-start text-left font-normal"
+            >
+              <CalendarBlank size={16} className="mr-2" />
+              {scheduledStartDate ? (
+                format(scheduledStartDate, 'PPP', { locale: es })
+              ) : (
+                <span className="text-muted-foreground">Comenzar hoy</span>
+              )}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar
+              mode="single"
+              selected={scheduledStartDate}
+              onSelect={setScheduledStartDate}
+              disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+              initialFocus
+              locale={es}
+            />
+          </PopoverContent>
+        </Popover>
+        <p className="text-xs text-muted-foreground">
+          Selecciona cuándo quieres que comience esta meta. Si no seleccionas una fecha, comenzará hoy.
         </p>
       </div>
 

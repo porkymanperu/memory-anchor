@@ -17,10 +17,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Target, TrendUp, Lightning, Plus, Check, Clock, X } from '@phosphor-icons/react';
+import { Target, TrendUp, Lightning, Plus, Check, Clock, X, CalendarBlank } from '@phosphor-icons/react';
 import { GoalTemplateSelector } from './GoalTemplateSelector';
 import { GoalConfiguration } from './GoalConfiguration';
 import { toast } from 'sonner';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 interface GoalsProps {
   userProgress: UserProgress;
@@ -179,6 +181,12 @@ export function Goals({ userProgress }: GoalsProps) {
                           <p className="text-sm text-muted-foreground mt-1">
                             {template.description}
                           </p>
+                          {goal.scheduledStartDate && new Date(goal.scheduledStartDate) > new Date() && (
+                            <p className="text-xs text-accent mt-2 flex items-center gap-1">
+                              <CalendarBlank size={14} />
+                              Comienza el {format(new Date(goal.scheduledStartDate), 'PPP', { locale: es })}
+                            </p>
+                          )}
                         </div>
                       </div>
                       <Button

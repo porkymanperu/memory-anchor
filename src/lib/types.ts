@@ -151,6 +151,7 @@ export interface UserGoal {
   templateId: string;
   customName?: string;
   startDate: string;
+  scheduledStartDate?: string;
   status: GoalStatus;
   configuration: {
     difficultyLevel?: 'easy' | 'medium' | 'hard';
