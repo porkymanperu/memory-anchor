@@ -8,26 +8,30 @@
 }
 
 :root {
-  --background: oklch(0.97 0.01 90);
-  --foreground: oklch(0.35 0.02 260);
+  --background: oklch(0.15 0.02 250);
+  --background-elevated: oklch(0.18 0.02 250);
+  --foreground: oklch(0.98 0 0);
 
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.35 0.02 260);
+  --card: oklch(0.20 0.025 250);
+  --card-elevated: oklch(0.24 0.025 250);
+  --card-foreground: oklch(0.98 0 0);
 
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.35 0.02 260);
+  --popover: oklch(0.22 0.025 250);
+  --popover-foreground: oklch(0.98 0 0);
 
-  --primary: oklch(0.45 0.15 275);
+  --primary: oklch(0.60 0.20 250);
+  --primary-bright: oklch(0.70 0.25 250);
   --primary-foreground: oklch(1 0 0);
 
-  --secondary: oklch(0.82 0.08 285);
-  --secondary-foreground: oklch(0.45 0.15 275);
+  --secondary: oklch(0.25 0.03 250);
+  --secondary-foreground: oklch(0.85 0 0);
 
-  --muted: oklch(0.92 0.01 285);
-  --muted-foreground: oklch(0.55 0.02 265);
+  --muted: oklch(0.30 0.02 250);
+  --muted-foreground: oklch(0.55 0.01 250);
 
-  --accent: oklch(0.75 0.15 195);
-  --accent-foreground: oklch(0.2 0 0);
+  --accent: oklch(0.65 0.22 220);
+  --accent-glow: oklch(0.65 0.22 220 / 0.3);
+  --accent-foreground: oklch(1 0 0);
 
   --destructive: oklch(0.55 0.22 25);
   --destructive-foreground: oklch(1 0 0);
@@ -35,30 +39,39 @@
   --success: oklch(0.65 0.18 155);
   --success-foreground: oklch(1 0 0);
 
-  --border: oklch(0.88 0.01 285);
-  --input: oklch(0.88 0.01 285);
-  --ring: oklch(0.75 0.15 195);
+  --border: oklch(0.28 0.02 250);
+  --input: oklch(0.28 0.02 250);
+  --ring: oklch(0.65 0.22 220);
 
-  --radius: 0.75rem;
+  --radius: 1.25rem;
 
-  --font-primary: 'Space Grotesk', sans-serif;
-  --font-secondary: 'Newsreader', serif;
+  --font-primary: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-secondary: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  
+  --gradient-primary: linear-gradient(135deg, oklch(0.60 0.20 250) 0%, oklch(0.70 0.25 240) 100%);
+  --gradient-accent: linear-gradient(135deg, oklch(0.65 0.22 220) 0%, oklch(0.70 0.25 250) 100%);
+  --glow-primary: 0 0 40px oklch(0.60 0.20 250 / 0.4);
+  --glow-accent: 0 0 40px oklch(0.65 0.22 220 / 0.3);
 }
 
 @theme {
   --color-background: var(--background);
+  --color-background-elevated: var(--background-elevated);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
+  --color-card-elevated: var(--card-elevated);
   --color-card-foreground: var(--card-foreground);
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
+  --color-primary-bright: var(--primary-bright);
   --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
   --color-accent: var(--accent);
+  --color-accent-glow: var(--accent-glow);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
@@ -68,11 +81,11 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
-  --radius-sm: calc(var(--radius) * 0.5);
+  --radius-sm: calc(var(--radius) * 0.4);
   --radius-md: var(--radius);
-  --radius-lg: calc(var(--radius) * 1.5);
-  --radius-xl: calc(var(--radius) * 2);
-  --radius-2xl: calc(var(--radius) * 3);
+  --radius-lg: calc(var(--radius) * 1.2);
+  --radius-xl: calc(var(--radius) * 1.6);
+  --radius-2xl: calc(var(--radius) * 2);
   --radius-full: 9999px;
 
   --font-family-primary: var(--font-primary);
@@ -83,10 +96,14 @@
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-primary);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-primary);
+    font-weight: 700;
+    letter-spacing: -0.02em;
   }
 }
 
@@ -96,4 +113,30 @@
 
 .font-secondary {
   font-family: var(--font-secondary);
+}
+
+.gradient-primary {
+  background: var(--gradient-primary);
+}
+
+.gradient-accent {
+  background: var(--gradient-accent);
+}
+
+.glow-primary {
+  box-shadow: var(--glow-primary);
+}
+
+.glow-accent {
+  box-shadow: var(--glow-accent);
+}
+
+.card-premium {
+  @apply bg-card rounded-2xl p-6 border border-border;
+  box-shadow: 0 4px 20px oklch(0 0 0 / 0.3);
+}
+
+.card-elevated {
+  @apply bg-card-elevated rounded-2xl p-6 border border-border/50;
+  box-shadow: 0 8px 32px oklch(0 0 0 / 0.4);
 }

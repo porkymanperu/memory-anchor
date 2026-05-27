@@ -1,14 +1,14 @@
 # Memory Training App - Product Requirements Document
 
-A mobile-first memory training application that helps users improve name recall through conversational practice exercises, progressive hints, and intelligent memory associations.
+A mobile-first premium dark mode memory training application that helps users improve name recall through conversational practice exercises, progressive hints, and intelligent memory associations. The experience feels immersive, elegant, intelligent, and calming with a modern neuroscience-inspired aesthetic.
 
 **Experience Qualities**:
-1. **Conversational** - Questions feel natural like real-world recall situations, not mechanical flashcards
-2. **Progressive** - Hints build gradually, associations strengthen naturally, difficulty adapts to user performance
-3. **Visual** - Strong image-based memory anchors, clean interface with bold visual hierarchy
+1. **Immersive & Premium** - Dark layered UI with soft gradients, glows, and elegant typography that feels like a high-end cognitive training platform
+2. **Intelligent & Futuristic** - Clean modern aesthetics with subtle sci-fi influences, progress tracking, and data visualization that emphasizes improvement
+3. **Calming & Focused** - Generous spacing, smooth animations, muted colors with accent highlights that reduce cognitive load and encourage daily engagement
 
 **Complexity Level**: Complex Application (advanced functionality, likely with multiple views)
-This is a multi-feature application with practice modes, AI-generated associations, searchable database, analytics dashboard, user-generated content, and sophisticated state management across multiple interconnected views.
+This is a multi-feature application with practice modes, AI-generated associations, searchable database, analytics dashboard, user-generated content, sophisticated spaced repetition algorithms, and goal tracking across multiple interconnected views.
 
 ## Essential Features
 
@@ -88,94 +88,99 @@ This is a multi-feature application with practice modes, AI-generated associatio
 
 ## Design Direction
 
-The design should evoke focus, confidence, and mental clarity - like entering a personal training gym for your brain. The interface should feel clean and uncluttered to avoid cognitive overload, with bold visual moments during success states. The aesthetic should balance serious cognitive training with encouraging, approachable warmth.
+The design should evoke immersion, intelligence, and premium quality - like entering a personalized cognitive training lab. The interface should feel elegant and spacious to reduce cognitive load, with soft glowing accents that guide attention. The aesthetic balances serious neuroscience-backed training with calming, approachable design that encourages daily habit formation.
 
 ## Color Selection
 
-A focused cognitive training palette emphasizing clarity, memory, and mental energy.
+A premium dark mode palette inspired by modern cognitive training and neuroscience applications, emphasizing depth, focus, and mental clarity.
 
-- **Primary Color**: Deep Indigo (oklch(0.45 0.15 275)) - Represents memory, focus, and cognitive depth
+- **Primary Color**: Deep Indigo Blue (oklch(0.60 0.20 250)) - Represents cognitive depth, memory, and neural activity
+- **Primary Bright**: Brighter Indigo (oklch(0.70 0.25 250)) - Used for gradients and emphasis moments
 - **Secondary Colors**: 
-  - Soft Lavender (oklch(0.82 0.08 285)) - Calming background for practice sessions
-  - Neural Slate (oklch(0.35 0.02 260)) - Grounding color for secondary UI elements
-- **Accent Color**: Bright Cyan (oklch(0.75 0.15 195)) - Electric mental clarity, used for correct answers and achievements
-- **Background**: Warm Off-White (oklch(0.97 0.01 90)) - Reduces eye strain, warmer than pure white
-- **Foreground/Background Pairings**:
-  - Primary (Deep Indigo): White text (oklch(1 0 0)) - Ratio 7.8:1 ✓
-  - Accent (Bright Cyan): Black text (oklch(0.2 0 0)) - Ratio 9.2:1 ✓
-  - Background (Warm Off-White): Neural Slate text (oklch(0.35 0.02 260)) - Ratio 8.5:1 ✓
-  - Secondary (Soft Lavender): Deep Indigo text (oklch(0.45 0.15 275)) - Ratio 5.1:1 ✓
+  - Dark Navy Surface (oklch(0.20 0.025 250)) - Main card backgrounds for layered depth
+  - Elevated Surface (oklch(0.24 0.025 250)) - Raised cards and interactive elements
+  - Deep Background (oklch(0.15 0.02 250)) - Base app background, creates depth
+- **Accent Color**: Bright Cyan (oklch(0.65 0.22 220)) - Electric mental clarity, used for CTAs, success states, and active elements
+- **Supporting Colors**:
+  - Success Green (oklch(0.65 0.18 155)) - Correct answers, achievements
+  - Destructive Red (oklch(0.55 0.22 25)) - Warnings, errors
+  - Muted Gray (oklch(0.30 0.02 250)) - Disabled states, subtle backgrounds
+
+**Foreground/Background Pairings**:
+  - Background (Dark Navy): White text (oklch(0.98 0 0)) - Ratio 14.2:1 ✓
+  - Card (Dark Surface): White text (oklch(0.98 0 0)) - Ratio 12.8:1 ✓
+  - Primary (Deep Indigo): White text (oklch(1 0 0)) - Ratio 5.8:1 ✓
+  - Accent (Bright Cyan): White text (oklch(1 0 0)) - Ratio 5.2:1 ✓
 
 ## Font Selection
 
-Typography should convey modern clarity and cognitive precision while remaining highly readable during practice sessions.
+Typography conveys modern sophistication and premium quality while maintaining exceptional readability for cognitive training.
 
-- **Primary Font**: Space Grotesk - Technical precision with friendly approachability, excellent for UI labels and questions
-- **Secondary Font**: Newsreader - Editorial elegance for memory associations and explanatory text, creates strong typographic contrast
+- **Primary Font**: Outfit - Modern geometric sans-serif with excellent legibility, confident and contemporary feel
+- **Secondary Font**: Inter - Clean technical precision for data, labels, and UI elements
 
 **Typographic Hierarchy**:
-- H1 (Screen Titles): Space Grotesk Bold / 32px / tight tracking (-0.02em)
-- H2 (Category Headers): Space Grotesk Semibold / 24px / normal tracking
-- H3 (Item Names): Space Grotesk Medium / 20px / normal tracking
-- Question Text: Space Grotesk Medium / 20px / relaxed line-height (1.6)
-- Body (Associations): Newsreader Regular / 17px / generous line-height (1.7)
-- UI Labels: Space Grotesk Medium / 14px / slight tracking (0.01em)
-- Caption: Space Grotesk Regular / 13px / muted color
+- H1 (Screen Titles): Outfit Extrabold / 48px / extra-tight tracking (-0.02em) / white
+- H2 (Section Headers): Outfit Bold / 32px / tight tracking (-0.02em) / white
+- H3 (Card Titles): Outfit Bold / 20px / normal tracking / white
+- Question Text: Outfit Semibold / 18px / relaxed line-height (1.6) / white
+- Body Text: Inter Regular / 16px / generous line-height (1.7) / muted white
+- UI Labels: Inter Semibold / 12px / wide tracking (0.05em) / uppercase / muted
+- Micro Labels: Inter Medium / 10px / wide tracking (0.08em) / uppercase / muted
 
 ## Animations
 
-Animations should reinforce cognitive moments - the "aha!" of recall, the progression through hints, the satisfaction of correct answers. Use smooth, physics-based motion for screen transitions (300ms ease-out). Subtle scale transforms (1.0 → 1.02) on card interactions provide tactile feedback. Hint reveals should slide in with gentle bounce (spring physics). Correct answer celebrations deserve a quick confetti burst or scale pulse. Keep practice session animations minimal to maintain focus, but celebrate achievements boldly.
+Animations emphasize premium quality and cognitive moments with smooth, purposeful motion. Screen transitions use 300-400ms ease-out curves. Interactive elements scale subtly (1.0 → 1.05) with soft glow effects on hover. Navigation tabs animate smoothly with color shifts and micro-movements. Cards fade in with gentle upward translation on load. Success states deserve satisfying feedback with scale pulses and glow intensification. All motion maintains a calm, sophisticated feel - responsive but never distracting from cognitive focus.
 
 ## Component Selection
 
 **Components**:
-- **Cards** (shadcn Card) - Primary container for questions, answers, memory items with elevated shadows for depth
-- **Buttons** (shadcn Button) - Large touch targets (min 56px height) with primary variant for main actions, outline for hints
-- **Dialog** (shadcn Dialog) - Category selection, settings, item details as full-screen mobile overlays
-- **Progress** (shadcn Progress) - Session completion, daily goal tracking with accent color fills
-- **Tabs** (shadcn Tabs) - Switch between practice types, library views, dashboard sections
-- **Input** (shadcn Input) - Search in library, custom item creation with clear focus states
-- **Badge** (shadcn Badge) - Category tags, difficulty indicators with color coding
-- **Avatar** (shadcn Avatar) - Actor photos, user profile images with circular crops
-- **Accordion** (shadcn Accordion) - Expandable hint sections, FAQ in settings
-- **Toast** (Sonner) - Success feedback, streak notifications, error messages
+- **Cards** (shadcn Card) - Large rounded (rounded-2xl) containers with elevated shadows and subtle glows for depth
+- **Buttons** (shadcn Button) - Large pill-shaped (rounded-full) touch targets (56px+ height) with gradient fills for primary actions
+- **Dialog** (shadcn Dialog) - Full-screen mobile modals with backdrop blur for settings, category selection, item details
+- **Progress** (shadcn Progress) - Smooth animated progress bars with glowing accent fills for session tracking
+- **Tabs** (shadcn Tabs) - Minimal bottom navigation with icon + label, smooth active state transitions
+- **Input** (shadcn Input) - Large rounded inputs with subtle borders, focus states with accent glow rings
+- **Badge** (shadcn Badge) - Small rounded pills for tags, difficulty indicators with soft color fills
+- **Avatar** (shadcn Avatar) - Circular image containers with subtle border glows
+- **Select** (shadcn Select) - Dropdown for category filtering with smooth animations
 
 **Customizations**:
-- Custom PracticeCard component wrapping Card with flip animation for answer reveals
-- Custom HintButton component with pulse animation when hints are available
-- Custom StreakCounter component with flame icon and animated number increment
-- Custom AssociationPanel component using Newsreader font with visual imagery emphasis
-- Custom ImagePlaceholder for graceful loading states
+- Custom GradientButton component with dual-color gradients and glow shadow effects
+- Custom StatCard component with large numbers, micro-labels, and background patterns
+- Custom SessionCard component with elevated appearance and smooth hover states
+- Custom ProgressRing component for circular progress indicators with gradient strokes
+- Custom FloatingActionButton component (large circular) with gradient and glow for primary actions
 
 **States**:
-- Buttons: default, hover (lift shadow), active (scale 0.98), disabled (reduced opacity 0.5)
-- Cards: neutral, correct (green border pulse), incorrect (shake animation), revealed (flip transition)
-- Inputs: default border, focus (accent ring), filled (subtle background), error (destructive border)
-- Hints: locked (gray), available (pulse), revealed (accent background)
+- Buttons: default (gradient), hover (scale 1.05 + glow), active (scale 0.95), disabled (opacity 0.5)
+- Cards: default (subtle shadow), hover (elevated shadow + subtle scale), active (border glow)
+- Navigation: inactive (muted), active (accent color + translate-up animation + scale 1.05)
+- Inputs: default (border), focus (accent glow ring + border highlight), filled (subtle background change)
 
-**Icon Selection**:
-- Brain (phosphor) - Practice mode
-- Books (phosphor) - Library/Browse
-- TrendUp (phosphor) - Progress/Analytics
-- Lightbulb (phosphor) - Hints
-- Plus (phosphor) - Add custom items
-- MagnifyingGlass (phosphor) - Search
-- Fire (phosphor) - Streak counter
-- Star (phosphor) - Favorites
-- Warning (phosphor) - Difficult items
+**Icon Selection** (Phosphor Icons):
+- Brain - Practice/Training mode (primary action)
+- Books - Library/Browse content
+- ChartLine - Progress/Analytics dashboard
+- Target - Goals and achievements
+- Lightbulb - Hints and suggestions
+- Plus - Add custom content
+- MagnifyingGlass - Search functionality
+- Fire - Streak counter and consistency
 
 **Spacing**:
-- Card padding: p-6 (24px) on mobile, p-8 (32px) on desktop
-- Section gaps: gap-4 (16px) for related items, gap-8 (32px) between major sections
-- Button spacing: gap-3 (12px) between button groups
-- Screen padding: px-4 (16px) on mobile, px-8 (32px) on tablet+
-- Vertical rhythm: space-y-6 for stacked content sections
+- Card padding: p-6 (24px) minimum, generous internal spacing
+- Screen margins: px-5 (20px) on mobile for comfortable edge spacing
+- Section gaps: gap-6 (24px) between major sections for clear separation
+- Card gaps: gap-4 (16px) in card grids
+- Large vertical spacing: py-8 (32px) between screen sections
 
 **Mobile**:
-- Single column layout throughout
-- Bottom navigation bar (fixed) with 4 main sections: Practice, Library, Progress, Settings
-- Full-width cards with comfortable touch targets (56px min height)
-- Large typography (18px+ for primary content)
-- Swipe gestures: swipe left to skip, swipe up for hint, tap to reveal
-- Collapsible navigation on desktop to maximize practice space
+- Mobile-first vertical scrolling layouts
+- Bottom navigation bar (fixed, backdrop blur, 80px height) with 4 main sections
+- Large circular primary action button (208px diameter) for starting sessions
+- Full-width cards (max-w-2xl centered) with generous spacing
+- Large touch targets (56px+ minimum)
+- Single column layouts throughout
+- Smooth scroll behavior with snap points where appropriate
 - Responsive images: full-width on mobile, max 600px centered on desktop

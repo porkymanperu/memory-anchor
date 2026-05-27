@@ -52,114 +52,206 @@ export function Home({ onStartPractice, userProgress }: HomeProps) {
     return acc;
   }, {} as Record<string, typeof categories>);
 
+  const todaysSessions = userProgress.sessions?.filter(session => {
+    const sessionDate = new Date(session.date);
+    const today = new Date();
+    return sessionDate.toDateString() === today.toDateString();
+  }) || [];
+
+  const hasCompletedToday = todaysSessions.length > 0;
+  
+  const recentSessions = userProgress.sessions?.slice(-3).reverse() || [];
+
   return (
-    <div className="pb-20 min-h-screen">
-      <div className="max-w-2xl mx-auto px-4 py-8">
+    <div className="min-h-screen">
+      <div className="max-w-2xl mx-auto px-5 pt-8 pb-6 space-y-6">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-12"
+          className="text-center space-y-3"
         >
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
-            <Brain size={32} weight="duotone" className="text-primary" />
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-gradient-to-br from-primary to-accent mb-2 glow-primary">
+            <Brain size={40} weight="duotone" className="text-white" />
           </div>
-          <h1 className="text-4xl font-bold tracking-tight mb-2">Memory Trainer</h1>
-          <p className="text-muted-foreground text-lg">
-            Train your memory through conversational recall
+          <h1 className="text-5xl font-extrabold tracking-tight">Memory Trainer</h1>
+          <p className="text-muted-foreground text-base max-w-sm mx-auto">
+            Entrena tu memoria con práctica conversacional inteligente
           </p>
         </motion.div>
 
-        <div className="flex justify-center">
+        <div className="flex justify-center py-8">
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setShowCategoryDialog(true)}
-            className="w-48 h-48 rounded-full bg-white text-primary shadow-2xl hover:shadow-xl transition-all duration-300 flex flex-col items-center justify-center group gap-2"
+            className="w-52 h-52 rounded-full bg-gradient-accent text-white shadow-2xl flex flex-col items-center justify-center group gap-3 glow-accent"
           >
-            <Play size={40} weight="fill" className="ml-1 group-hover:scale-110 transition-transform" />
-            <span className="font-semibold text-lg">Start Session</span>
+            <Play size={48} weight="fill" className="ml-1.5 group-hover:scale-110 transition-transform" />
+            <span className="font-bold text-xl">Start Session</span>
           </motion.button>
         </div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="card-elevated space-y-4"
+        >
+          <div className="flex items-center gap-3">
+            <div className={`w-3 h-3 rounded-full ${hasCompletedToday ? 'bg-success' : 'bg-muted'}`} />
+            <h2 className="text-xl font-bold">Sesión de Hoy</h2>
+          </div>
+          
+          {hasCompletedToday ? (
+            <div className="space-y-3">
+              <p className="text-success-foreground bg-success/20 px-4 py-3 rounded-xl text-sm font-semibold">
+                ✓ Completada - ¡Excelente trabajo!
+              </p>
+              <div className="grid grid-cols-3 gap-3 pt-2">
+                <div className="bg-background-elevated rounded-xl p-3 text-center">
+                  <p className="text-2xl font-bold text-accent">{todaysSessions[0]?.questionsCorrect || 0}</p>
+                  <p className="text-xs text-muted-foreground mt-1 uppercase tracking-wide">Correctas</p>
+                </div>
+                <div className="bg-background-elevated rounded-xl p-3 text-center">
+                  <p className="text-2xl font-bold text-foreground">{todaysSessions[0]?.questionsAsked || 0}</p>
+                  <p className="text-xs text-muted-foreground mt-1 uppercase tracking-wide">Total</p>
+                </div>
+                <div className="bg-background-elevated rounded-xl p-3 text-center">
+                  <p className="text-2xl font-bold text-primary">
+                    {todaysSessions[0]?.questionsAsked > 0 
+                      ? Math.round((todaysSessions[0].questionsCorrect / todaysSessions[0].questionsAsked) * 100) 
+                      : 0}%
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1 uppercase tracking-wide">Precisión</p>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="bg-background-elevated rounded-xl p-4 border border-border/50">
+              <p className="text-muted-foreground text-sm text-center">
+                Aún no has completado tu sesión de hoy
+              </p>
+            </div>
+          )}
+        </motion.div>
+
+        {recentSessions.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="card-premium space-y-4"
+          >
+            <h2 className="text-xl font-bold">Sesiones Recientes</h2>
+            <div className="space-y-2">
+              {recentSessions.map((session, index) => {
+                const accuracy = session.questionsAsked > 0 
+                  ? Math.round((session.questionsCorrect / session.questionsAsked) * 100) 
+                  : 0;
+                const sessionDate = new Date(session.date);
+                
+                return (
+                  <div key={index} className="bg-background-elevated rounded-xl p-4 flex items-center justify-between">
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold">
+                        {sessionDate.toLocaleDateString('es-PE', { month: 'short', day: 'numeric' })}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {session.questionsCorrect}/{session.questionsAsked} correctas
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className={`text-lg font-bold ${
+                        accuracy >= 80 ? 'text-success' : 
+                        accuracy >= 60 ? 'text-accent' : 
+                        'text-muted-foreground'
+                      }`}>
+                        {accuracy}%
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
       </div>
 
       <Dialog open={showCategoryDialog} onOpenChange={setShowCategoryDialog}>
-        <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto bg-card border-border/50">
           <DialogHeader>
-            <DialogTitle>Select Practice Categories</DialogTitle>
-            <DialogDescription>
-              Choose categories and difficulty level
+            <DialogTitle className="text-2xl font-bold">Configurar Sesión</DialogTitle>
+            <DialogDescription className="text-muted-foreground">
+              Elige categorías y nivel de dificultad
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-6 py-4">
             <div>
-              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-                Difficulty Level
+              <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-4">
+                Nivel de Dificultad
               </h3>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-3 gap-3">
                 {(['easy', 'medium', 'hard'] as const).map((difficulty) => (
-                  <button
+                  <motion.button
                     key={difficulty}
+                    whileTap={{ scale: 0.95 }}
                     onClick={() => handleDifficultyChange(difficulty)}
-                    className={`px-4 py-3 rounded-lg border-2 transition-all font-medium text-sm capitalize ${
+                    className={`px-4 py-4 rounded-2xl transition-all font-bold text-sm capitalize ${
                       selectedDifficulty === difficulty
-                        ? 'border-primary bg-primary text-primary-foreground'
-                        : 'border-border hover:border-primary/50 bg-card'
+                        ? 'bg-gradient-accent text-white shadow-lg glow-accent'
+                        : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
                     }`}
                   >
-                    {difficulty}
-                  </button>
+                    {difficulty === 'easy' ? 'Fácil' : difficulty === 'medium' ? 'Medio' : 'Difícil'}
+                  </motion.button>
                 ))}
               </div>
-              <p className="text-xs text-muted-foreground mt-2">
-                {selectedDifficulty === 'easy' && 'Simple questions, perfect for beginners'}
-                {selectedDifficulty === 'medium' && 'Moderate challenge, good for practice'}
-                {selectedDifficulty === 'hard' && 'Advanced questions for experienced learners'}
+              <p className="text-xs text-muted-foreground mt-3 px-1">
+                {selectedDifficulty === 'easy' && 'Preguntas simples, perfecto para empezar'}
+                {selectedDifficulty === 'medium' && 'Desafío moderado, ideal para practicar'}
+                {selectedDifficulty === 'hard' && 'Preguntas avanzadas para expertos'}
               </p>
             </div>
             
             <div>
-              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-                Number of Questions
+              <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-4">
+                Cantidad de Preguntas
               </h3>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-2xl font-bold text-primary">{questionCount}</span>
-                  <span className="text-sm text-muted-foreground">
-                    Range: {getQuestionRange(selectedDifficulty).min}-{getQuestionRange(selectedDifficulty).max}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between px-1">
+                  <span className="text-4xl font-extrabold text-accent">{questionCount}</span>
+                  <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wide">
+                    Rango: {getQuestionRange(selectedDifficulty).min}-{getQuestionRange(selectedDifficulty).max}
                   </span>
                 </div>
-                <div className="relative pt-1">
+                <div className="relative pt-1 px-1">
                   <input
                     type="range"
                     min={getQuestionRange(selectedDifficulty).min}
                     max={getQuestionRange(selectedDifficulty).max}
                     value={questionCount}
                     onChange={(e) => setQuestionCount(parseInt(e.target.value))}
-                    className="w-full h-3 rounded-lg appearance-none cursor-pointer"
-                    style={{
-                      background: `linear-gradient(to right, oklch(0.45 0.15 275) 0%, oklch(0.45 0.15 275) ${((questionCount - getQuestionRange(selectedDifficulty).min) / (getQuestionRange(selectedDifficulty).max - getQuestionRange(selectedDifficulty).min)) * 100}%, oklch(0.82 0.08 285) ${((questionCount - getQuestionRange(selectedDifficulty).min) / (getQuestionRange(selectedDifficulty).max - getQuestionRange(selectedDifficulty).min)) * 100}%, oklch(0.82 0.08 285) 100%)`
-                    }}
+                    className="w-full h-2 rounded-full appearance-none cursor-pointer bg-secondary"
                   />
                   <style>{`
                     input[type="range"]::-webkit-slider-thumb {
                       appearance: none;
-                      width: 20px;
-                      height: 20px;
+                      width: 24px;
+                      height: 24px;
                       border-radius: 50%;
-                      background: white;
-                      border: 3px solid oklch(0.45 0.15 275);
+                      background: linear-gradient(135deg, oklch(0.65 0.22 220) 0%, oklch(0.70 0.25 250) 100%);
                       cursor: pointer;
-                      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+                      box-shadow: 0 0 20px oklch(0.65 0.22 220 / 0.5);
                     }
                     input[type="range"]::-moz-range-thumb {
-                      width: 20px;
-                      height: 20px;
+                      width: 24px;
+                      height: 24px;
                       border-radius: 50%;
-                      background: white;
-                      border: 3px solid oklch(0.45 0.15 275);
+                      background: linear-gradient(135deg, oklch(0.65 0.22 220) 0%, oklch(0.70 0.25 250) 100%);
                       cursor: pointer;
-                      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+                      border: none;
+                      box-shadow: 0 0 20px oklch(0.65 0.22 220 / 0.5);
                     }
                   `}</style>
                 </div>
@@ -167,26 +259,27 @@ export function Home({ onStartPractice, userProgress }: HomeProps) {
             </div>
             {Object.entries(groupedCategories).map(([group, cats]) => (
               <div key={group}>
-                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-4">
                   {group}
                 </h3>
-                <div className="grid gap-2">
+                <div className="grid gap-3">
                   {cats.map(category => (
-                    <button
+                    <motion.button
                       key={category.id}
+                      whileTap={{ scale: 0.98 }}
                       onClick={() => toggleCategory(category.id)}
-                      className={`flex items-center justify-between p-4 rounded-lg border-2 transition-all ${
+                      className={`flex items-center justify-between p-4 rounded-2xl transition-all ${
                         selectedCategories.includes(category.id)
-                          ? 'border-primary bg-primary/5'
-                          : 'border-border hover:border-primary/50'
+                          ? 'bg-accent/20 border-2 border-accent'
+                          : 'bg-secondary border-2 border-transparent hover:border-border'
                       }`}
                     >
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-4">
                         <div
-                          className="w-10 h-10 rounded-full flex items-center justify-center"
-                          style={{ backgroundColor: `${category.color}20` }}
+                          className="w-11 h-11 rounded-full flex items-center justify-center text-2xl"
+                          style={{ backgroundColor: `${category.color}30` }}
                         >
-                          <span className="text-xl">
+                          <span>
                             {category.icon === 'user' && '👤'}
                             {category.icon === 'film' && '🎬'}
                             {category.icon === 'music-notes' && '🎵'}
@@ -202,35 +295,39 @@ export function Home({ onStartPractice, userProgress }: HomeProps) {
                             {category.icon === 'diamond' && '💎'}
                           </span>
                         </div>
-                        <span className="font-medium">{category.name}</span>
+                        <span className="font-semibold">{category.name}</span>
                       </div>
                       {selectedCategories.includes(category.id) && (
-                        <Badge variant="default">Selected</Badge>
+                        <div className="w-6 h-6 rounded-full bg-accent flex items-center justify-center">
+                          <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
                       )}
-                    </button>
+                    </motion.button>
                   ))}
                 </div>
               </div>
             ))}
           </div>
 
-          <div className="flex gap-3">
+          <div className="flex gap-3 pt-2">
             <Button
               variant="outline"
-              className="flex-1"
+              className="flex-1 h-14 rounded-2xl font-bold text-base"
               onClick={() => {
                 setSelectedCategories([]);
                 setShowCategoryDialog(false);
               }}
             >
-              Cancel
+              Cancelar
             </Button>
             <Button
-              className="flex-1"
+              className="flex-1 h-14 rounded-2xl font-bold text-base bg-gradient-accent text-white glow-accent"
               onClick={handleStartPractice}
               disabled={selectedCategories.length === 0}
             >
-              Start ({selectedCategories.length})
+              Comenzar ({selectedCategories.length})
             </Button>
           </div>
         </DialogContent>
