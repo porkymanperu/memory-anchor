@@ -1,28 +1,42 @@
-import { useState, useRef, useMemo } from 'react';
-import { CategoryId, MemoryItem, UserProgress, CategoryGroup } from '@/lib/types';
+import { useState, useRef, useMemo, useEffect } from 'react';
+import { CategoryId, DeletedMemoryItem, MemoryItem, UserProgress, CategoryGroup } from '@/lib/types';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MagnifyingGlass, Star, X, Sparkle, FilmStrip, MapPin, ShoppingBag, Plus, Image as ImageIcon, Upload, CaretLeft, CaretRight, CaretDoubleLeft, CaretDoubleRight } from '@phosphor-icons/react';
+import { MagnifyingGlass, Star, X, Sparkle, FilmStrip, MapPin, ShoppingBag, Plus, Image as ImageIcon, Upload, CaretLeft, CaretRight, CaretDoubleLeft, CaretDoubleRight, Trash, FileCsv } from '@phosphor-icons/react';
 import { categories } from '@/lib/data';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getCategoryIcon } from '@/lib/helpers';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { MemoryItemDetail } from './MemoryItemDetail';
+import { CsvImportDialog } from './CsvImportDialog';
 
 interface LibraryProps {
   allItems: MemoryItem[];
+  recycleBinItems: DeletedMemoryItem[];
   userProgress: UserProgress;
   setUserProgress: (updater: (prev: UserProgress) => UserProgress) => void;
   setAllItems: (updater: (prev: MemoryItem[]) => MemoryItem[]) => void;
+  setRecycleBinItems: (updater: (prev: DeletedMemoryItem[]) => DeletedMemoryItem[]) => void;
 }
 
-export function Library({ allItems, userProgress, setAllItems }: LibraryProps) {
+export function Library({ allItems, recycleBinItems, userProgress, setUserProgress, setAllItems, setRecycleBinItems }: LibraryProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<CategoryId | 'all'>('all');
   const [selectedItem, setSelectedItem] = useState<MemoryItem | null>(null);
@@ -34,6 +48,14 @@ export function Library({ allItems, userProgress, setAllItems }: LibraryProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
   const [isGeneratingHints, setIsGeneratingHints] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<MemoryItem | null>(null);
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [selectedItemIds, setSelectedItemIds] = useState<Set<string>>(new Set());
+  const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
+  const [isRecycleBinOpen, setIsRecycleBinOpen] = useState(false);
+  const [selectedRecycleBinIds, setSelectedRecycleBinIds] = useState<Set<string>>(new Set());
+  const [isRestoreConfirmOpen, setIsRestoreConfirmOpen] = useState(false);
+  const [isCsvImportOpen, setIsCsvImportOpen] = useState(false);
   
   const [newItemForm, setNewItemForm] = useState({
     categoryId: 'actors' as CategoryId,
@@ -209,6 +231,152 @@ Solo responde con el JSON, sin texto adicional.`;
     setUploadMode('url');
   };
 
+  useEffect(() => {
+    const validIds = new Set(allItems.map(item => item.id));
+    setSelectedItemIds((prev) => {
+      const next = new Set([...prev].filter(id => validIds.has(id)));
+      return next.size === prev.size ? prev : next;
+    });
+  }, [allItems]);
+
+  useEffect(() => {
+    const validRecycleIds = new Set(recycleBinItems.map(entry => entry.item.id));
+    setSelectedRecycleBinIds((prev) => {
+      const next = new Set([...prev].filter(id => validRecycleIds.has(id)));
+      return next.size === prev.size ? prev : next;
+    });
+  }, [recycleBinItems]);
+
+  const toggleSelectionMode = () => {
+    setIsSelectionMode((prev) => {
+      if (prev) {
+        setSelectedItemIds(new Set());
+      }
+      return !prev;
+    });
+  };
+
+  const toggleItemSelection = (itemId: string) => {
+    setSelectedItemIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(itemId)) {
+        next.delete(itemId);
+      } else {
+        next.add(itemId);
+      }
+      return next;
+    });
+  };
+
+  const selectAllFilteredItems = () => {
+    setSelectedItemIds(new Set(filteredItems.map(item => item.id)));
+  };
+
+  const clearSelection = () => {
+    setSelectedItemIds(new Set());
+  };
+
+  const upsertRecycleBinItems = (items: MemoryItem[]) => {
+    if (items.length === 0) return;
+
+    const deletedAt = new Date().toISOString();
+    const deletedIds = new Set(items.map(item => item.id));
+    const recycleEntries = items.map(item => ({ item, deletedAt }));
+
+    setRecycleBinItems((prev) => [
+      ...recycleEntries,
+      ...prev.filter(entry => !deletedIds.has(entry.item.id)),
+    ]);
+  };
+
+  const handleDeleteItem = (itemId: string) => {
+    const itemToMove = allItems.find(item => item.id === itemId);
+    if (!itemToMove) {
+      setItemToDelete(null);
+      return;
+    }
+
+    setAllItems((prev) => prev.filter(item => item.id !== itemId));
+    upsertRecycleBinItems([itemToMove]);
+
+    if (selectedItem?.id === itemId) {
+      setSelectedItem(null);
+    }
+
+    toast.success('Memory item moved to Recycle Bin');
+    setItemToDelete(null);
+  };
+
+  const handleBulkDelete = () => {
+    const itemIdsToDelete = new Set(selectedItemIds);
+    const deletedCount = itemIdsToDelete.size;
+
+    if (deletedCount === 0) {
+      setIsBulkDeleteDialogOpen(false);
+      return;
+    }
+
+    const itemsToMove = allItems.filter(item => itemIdsToDelete.has(item.id));
+
+    setAllItems((prev) => prev.filter(item => !itemIdsToDelete.has(item.id)));
+    upsertRecycleBinItems(itemsToMove);
+
+    if (selectedItem && itemIdsToDelete.has(selectedItem.id)) {
+      setSelectedItem(null);
+    }
+
+    setSelectedItemIds(new Set());
+    setIsSelectionMode(false);
+    setIsBulkDeleteDialogOpen(false);
+    toast.success(`${deletedCount} memory ${deletedCount === 1 ? 'item' : 'items'} moved to Recycle Bin`);
+  };
+
+  const toggleRecycleBinSelection = (itemId: string) => {
+    setSelectedRecycleBinIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(itemId)) {
+        next.delete(itemId);
+      } else {
+        next.add(itemId);
+      }
+      return next;
+    });
+  };
+
+  const restoreSelectedItems = () => {
+    const idsToRestore = new Set(selectedRecycleBinIds);
+    const restoreCount = idsToRestore.size;
+
+    if (restoreCount === 0) {
+      setIsRestoreConfirmOpen(false);
+      return;
+    }
+
+    const itemsToRestore = recycleBinItems
+      .filter(entry => idsToRestore.has(entry.item.id))
+      .map(entry => entry.item);
+
+    setAllItems((prev) => {
+      const existingIds = new Set(prev.map(item => item.id));
+      const uniqueItems = itemsToRestore.filter(item => !existingIds.has(item.id));
+      return [...prev, ...uniqueItems];
+    });
+
+    setRecycleBinItems((prev) => prev.filter(entry => !idsToRestore.has(entry.item.id)));
+    setSelectedRecycleBinIds(new Set());
+    setIsRestoreConfirmOpen(false);
+    toast.success(`${restoreCount} memory ${restoreCount === 1 ? 'item' : 'items'} restored`);
+  };
+
+  const handleRestoreAction = () => {
+    if (selectedRecycleBinIds.size > 1) {
+      setIsRestoreConfirmOpen(true);
+      return;
+    }
+
+    restoreSelectedItems();
+  };
+
   const filteredItems = useMemo(() => {
     const items = allItems.filter(item => {
       const matchesSearch = 
@@ -225,6 +393,9 @@ Solo responde con el JSON, sin texto adicional.`;
   }, [allItems, searchQuery, selectedCategory, selectedGroup]);
 
   const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
+  const selectedCount = selectedItemIds.size;
+  const isAllFilteredSelected = filteredItems.length > 0 && filteredItems.every(item => selectedItemIds.has(item.id));
+  const selectedRecycleCount = selectedRecycleBinIds.size;
   const paginatedItems = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
     return filteredItems.slice(startIndex, startIndex + itemsPerPage);
@@ -317,13 +488,128 @@ Solo responde con el JSON, sin texto adicional.`;
                 Explore {allItems.length} memory items across {categories.length} categories
               </p>
             </div>
-            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-              <DialogTrigger asChild>
-                <Button className="flex-shrink-0 gap-2 shadow-md">
-                  <Plus size={20} weight="bold" />
-                  Add Item
-                </Button>
-              </DialogTrigger>
+            <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+              <Button
+                variant={isSelectionMode ? 'default' : 'outline'}
+                onClick={toggleSelectionMode}
+                className="flex-shrink-0"
+              >
+                {isSelectionMode ? 'Done' : 'Select'}
+              </Button>
+
+              <Dialog open={isRecycleBinOpen} onOpenChange={setIsRecycleBinOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" className="flex-shrink-0 gap-2">
+                    <Trash size={18} weight="bold" />
+                    Recycle Bin
+                    {recycleBinItems.length > 0 && (
+                      <Badge variant="secondary" className="ml-1">
+                        {recycleBinItems.length}
+                      </Badge>
+                    )}
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle className="text-2xl">Recycle Bin</DialogTitle>
+                    <DialogDescription>
+                      Restore deleted memory items back to your main library.
+                    </DialogDescription>
+                  </DialogHeader>
+
+                  {recycleBinItems.length === 0 ? (
+                    <Card className="border-2 border-dashed mt-2">
+                      <CardContent className="pt-12 pb-12 text-center">
+                        <Trash size={40} className="mx-auto mb-3 text-muted-foreground opacity-60" />
+                        <p className="text-muted-foreground text-lg font-medium mb-1">Recycle Bin is empty</p>
+                        <p className="text-sm text-muted-foreground">Deleted memory items will appear here.</p>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <div className="space-y-4 mt-2">
+                      <div className="flex items-center justify-between gap-3 flex-wrap">
+                        <p className="text-sm text-muted-foreground">
+                          {selectedRecycleCount} selected of {recycleBinItems.length}
+                        </p>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              if (selectedRecycleCount === recycleBinItems.length) {
+                                setSelectedRecycleBinIds(new Set());
+                              } else {
+                                setSelectedRecycleBinIds(new Set(recycleBinItems.map(entry => entry.item.id)));
+                              }
+                            }}
+                          >
+                            {selectedRecycleCount === recycleBinItems.length ? 'Clear' : 'Select all'}
+                          </Button>
+                          <Button
+                            size="sm"
+                            onClick={handleRestoreAction}
+                            disabled={selectedRecycleCount === 0}
+                          >
+                            Restore Selected
+                          </Button>
+                        </div>
+                      </div>
+
+                      <div className="grid gap-2">
+                        {recycleBinItems.map((entry) => {
+                          const { item, deletedAt } = entry;
+                          const isSelected = selectedRecycleBinIds.has(item.id);
+                          const ItemIcon = getCategoryIconComponent(item.categoryId);
+
+                          return (
+                            <div
+                              key={item.id}
+                              className={`flex items-start gap-3 p-3 rounded-lg border transition-colors ${isSelected ? 'border-primary bg-primary/5' : 'border-border bg-card'}`}
+                            >
+                              <Checkbox
+                                checked={isSelected}
+                                onCheckedChange={() => toggleRecycleBinSelection(item.id)}
+                                aria-label={`Select deleted item ${item.answer}`}
+                                className="mt-1"
+                              />
+                              <ItemIcon
+                                size={18}
+                                weight="duotone"
+                                className="flex-shrink-0 mt-0.5"
+                                style={{ color: getCategoryColor(item.categoryId) }}
+                              />
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium text-sm truncate">{item.answer}</p>
+                                <p className="text-xs text-muted-foreground truncate">{item.question}</p>
+                                <p className="text-[11px] text-muted-foreground mt-1">
+                                  Deleted {new Date(deletedAt).toLocaleString()}
+                                </p>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </DialogContent>
+              </Dialog>
+
+              <Button
+                variant="outline"
+                className="flex-shrink-0 gap-2"
+                onClick={() => setIsCsvImportOpen(true)}
+              >
+                <FileCsv size={18} weight="bold" />
+                Import CSV
+              </Button>
+
+              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button className="flex-shrink-0 gap-2 shadow-md">
+                    <Plus size={20} weight="bold" />
+                    Add Item
+                  </Button>
+                </DialogTrigger>
               <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle className="text-2xl">Add New Memory Item</DialogTitle>
@@ -666,7 +952,8 @@ Solo responde con el JSON, sin texto adicional.`;
                   </div>
                 </div>
               </DialogContent>
-            </Dialog>
+              </Dialog>
+            </div>
           </div>
         </motion.div>
 
@@ -818,9 +1105,23 @@ Solo responde con el JSON, sin texto adicional.`;
             {filteredItems.length === 0 ? (
               <Card className="border-2 border-dashed">
                 <CardContent className="pt-16 pb-16 text-center">
-                  <MagnifyingGlass size={48} className="mx-auto mb-4 text-muted-foreground opacity-50" />
-                  <p className="text-muted-foreground text-lg font-medium mb-1">No items found</p>
-                  <p className="text-sm text-muted-foreground">Try adjusting your search or filters</p>
+                  {allItems.length === 0 ? (
+                    <>
+                      <Sparkle size={48} className="mx-auto mb-4 text-muted-foreground opacity-50" />
+                      <p className="text-muted-foreground text-lg font-medium mb-1">Your Memory Library is empty</p>
+                      <p className="text-sm text-muted-foreground mb-4">Add a new memory item or open Recycle Bin to restore deleted items.</p>
+                      <Button variant="outline" onClick={() => setIsRecycleBinOpen(true)} className="gap-2">
+                        <Trash size={16} weight="bold" />
+                        Open Recycle Bin
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <MagnifyingGlass size={48} className="mx-auto mb-4 text-muted-foreground opacity-50" />
+                      <p className="text-muted-foreground text-lg font-medium mb-1">No items found</p>
+                      <p className="text-sm text-muted-foreground">Try adjusting your search or filters</p>
+                    </>
+                  )}
                 </CardContent>
               </Card>
             ) : (
@@ -838,50 +1139,80 @@ Solo responde con el JSON, sin texto adicional.`;
                 <div className="grid gap-2">
                   {paginatedItems.map((item, index) => {
                     const ItemIcon = getCategoryIconComponent(item.categoryId);
+                    const isSelected = selectedItemIds.has(item.id);
                     return (
-                      <motion.button
+                      <motion.div
                         key={item.id}
-                        onClick={() => setSelectedItem(item)}
-                        className="w-full text-left group"
+                        className="w-full group"
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: index * 0.02 }}
                         whileHover={{ scale: 1.005 }}
                         whileTap={{ scale: 0.995 }}
                       >
-                        <div className="flex items-center gap-3 px-4 py-2.5 bg-card border border-border rounded-lg hover:border-primary/50 hover:bg-accent/5 transition-all">
-                          <ItemIcon 
-                            size={20} 
-                            weight="duotone"
-                            className="flex-shrink-0 text-muted-foreground group-hover:text-primary transition-colors"
-                            style={{ color: getCategoryColor(item.categoryId) }}
-                          />
-                          <div className="flex-1 min-w-0 flex flex-col gap-0.5">
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium text-sm truncate group-hover:text-primary transition-colors">
-                                {item.answer}
+                        <div className={`flex items-center gap-2 px-3 py-2 bg-card border rounded-lg transition-all ${isSelected ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50 hover:bg-accent/5'}`}>
+                          <button
+                            type="button"
+                            onClick={() => isSelectionMode ? toggleItemSelection(item.id) : setSelectedItem(item)}
+                            className="flex-1 min-w-0 flex items-center gap-3 text-left"
+                          >
+                            {isSelectionMode && (
+                              <Checkbox
+                                checked={isSelected}
+                                onCheckedChange={() => toggleItemSelection(item.id)}
+                                onClick={(event) => event.stopPropagation()}
+                                aria-label={`Select ${item.answer}`}
+                              />
+                            )}
+                            <ItemIcon 
+                              size={20} 
+                              weight="duotone"
+                              className="flex-shrink-0 text-muted-foreground group-hover:text-primary transition-colors"
+                              style={{ color: getCategoryColor(item.categoryId) }}
+                            />
+                            <div className="flex-1 min-w-0 flex flex-col gap-0.5">
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium text-sm truncate group-hover:text-primary transition-colors">
+                                  {item.answer}
+                                </span>
+                                {userProgress.favoriteItems?.includes(item.id) && (
+                                  <Star size={14} weight="fill" className="text-accent flex-shrink-0" />
+                                )}
+                                {item.questions && item.questions.length > 1 && (
+                                  <Badge 
+                                    variant="secondary" 
+                                    className="text-[10px] h-4 px-1.5 flex-shrink-0 bg-primary/10 text-primary border-primary/20"
+                                  >
+                                    {item.questions.length} questions
+                                  </Badge>
+                                )}
+                              </div>
+                              <span className="text-xs text-muted-foreground truncate">
+                                {item.question}
                               </span>
-                              {userProgress.favoriteItems?.includes(item.id) && (
-                                <Star size={14} weight="fill" className="text-accent flex-shrink-0" />
-                              )}
-                              {item.questions && item.questions.length > 1 && (
-                                <Badge 
-                                  variant="secondary" 
-                                  className="text-[10px] h-4 px-1.5 flex-shrink-0 bg-primary/10 text-primary border-primary/20"
-                                >
-                                  {item.questions.length} questions
-                                </Badge>
-                              )}
                             </div>
-                            <span className="text-xs text-muted-foreground truncate">
-                              {item.question}
-                            </span>
-                          </div>
-                          <svg className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                          </svg>
+                            <svg className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            </svg>
+                          </button>
+
+                          {!isSelectionMode && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                setItemToDelete(item);
+                              }}
+                              aria-label={`Delete ${item.answer}`}
+                            >
+                              <Trash size={16} weight="bold" />
+                            </Button>
+                          )}
                         </div>
-                      </motion.button>
+                      </motion.div>
                     );
                   })}
                 </div>
@@ -960,6 +1291,112 @@ Solo responde con el JSON, sin texto adicional.`;
             )}
           </motion.div>
         </AnimatePresence>
+
+        <AlertDialog open={!!itemToDelete} onOpenChange={(open) => !open && setItemToDelete(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete memory item?</AlertDialogTitle>
+              <AlertDialogDescription>
+                &quot;{itemToDelete?.answer}&quot; will be moved to Recycle Bin. You can restore it later from the Recycle Bin.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setItemToDelete(null)}>
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => itemToDelete && handleDeleteItem(itemToDelete.id)}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        <AlertDialog open={isBulkDeleteDialogOpen} onOpenChange={setIsBulkDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>
+                Are you sure you want to delete {selectedCount} memory {selectedCount === 1 ? 'item' : 'items'}?
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                The selected memory {selectedCount === 1 ? 'item will' : 'items will'} be moved to Recycle Bin.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleBulkDelete}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        <AlertDialog open={isRestoreConfirmOpen} onOpenChange={setIsRestoreConfirmOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>
+                Restore {selectedRecycleCount} memory items?
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                The selected items will be moved back to your Memory Library.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={restoreSelectedItems}>
+                Restore
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {isSelectionMode && selectedCount > 0 && (
+          <motion.div
+            initial={{ y: 16, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 16, opacity: 0 }}
+            className="fixed bottom-24 left-0 right-0 z-40 px-4"
+          >
+            <div className="max-w-2xl mx-auto bg-card/95 backdrop-blur-xl border border-border rounded-xl shadow-lg p-3 flex items-center gap-2">
+              <p className="text-sm font-medium flex-1 min-w-0">
+                {selectedCount} selected
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={isAllFilteredSelected ? clearSelection : selectAllFilteredItems}
+              >
+                {isAllFilteredSelected ? 'Clear' : 'Select all'}
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => setIsBulkDeleteDialogOpen(true)}
+                className="gap-1"
+                disabled={selectedCount === 0}
+              >
+                <Trash size={14} weight="bold" />
+                Delete Selected
+              </Button>
+            </div>
+          </motion.div>
+        )}
+        <CsvImportDialog
+          open={isCsvImportOpen}
+          onOpenChange={setIsCsvImportOpen}
+          allItems={allItems}
+          onImport={(newItems) => {
+            setAllItems((prev) => [...prev, ...newItems]);
+            toast.success(`${newItems.length} memory ${newItems.length === 1 ? 'item' : 'items'} imported`);
+          }}
+        />
       </div>
     </div>
   );
