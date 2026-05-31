@@ -3,7 +3,7 @@ import { UserProgress, PracticeSession, CategoryId, CategoryGroup } from '@/lib/
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Clock, CheckCircle, XCircle, Lightbulb, Funnel, X, Calendar, Target, Trash, StackSimple } from '@phosphor-icons/react';
+import { Clock, CheckCircle, XCircle, Lightbulb, Funnel, X, Trash, StackSimple, ChartBar } from '@phosphor-icons/react';
 import { formatDate, getLocalDateString } from '@/lib/helpers';
 import { categories } from '@/lib/data';
 import { Badge } from '@/components/ui/badge';
@@ -13,9 +13,12 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { SessionCalendar } from '@/components/SessionCalendar';
-import { isToday, parseISO, format } from 'date-fns';
+import { parseISO, format, startOfWeek, startOfMonth, subDays, subWeeks, subMonths, eachDayOfInterval, eachWeekOfInterval, eachMonthOfInterval, endOfWeek, endOfMonth, isSameMonth } from 'date-fns';
 import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Line, ComposedChart } from 'recharts';
 
 interface ProgressProps {
   userProgress: UserProgress;
@@ -31,6 +34,7 @@ export function Progress({ userProgress, setUserProgress }: ProgressProps) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [sessionToDelete, setSessionToDelete] = useState<string | null>(null);
   const [groupBy, setGroupBy] = useState<'none' | CategoryGroup>('none');
+  const [chartPeriod, setChartPeriod] = useState<'daily' | 'weekly' | 'monthly'>('daily');
 
   const getCategoryName = (categoryId: string) => {
     return categories.find(c => c.id === categoryId)?.name || categoryId;
@@ -148,26 +152,97 @@ export function Progress({ userProgress, setUserProgress }: ProgressProps) {
     toast.success('Session deleted successfully');
   };
 
-  const hasCompletedToday = userProgress.sessions.some((session) => {
-    try {
-      const sessionDate = new Date(session.date);
-      const sessionDateKey = getLocalDateString(sessionDate);
-      const todayKey = getLocalDateString(new Date());
-      return sessionDateKey === todayKey;
-    } catch {
-      return false;
-    }
-  });
+  const chartData = useMemo(() => {
+    const sessions = userProgress.sessions || [];
+    const now = new Date();
 
-  const recentSessions = userProgress.sessions
-    .slice(-5)
-    .reverse()
-    .map((session) => {
-      const accuracy = session.questionsAsked > 0 
-        ? Math.round((session.questionsCorrect / session.questionsAsked) * 100)
-        : 0;
-      return { ...session, accuracy };
-    });
+    type Bucket = {
+      label: string;
+      questionsAsked: number;
+      questionsCorrect: number;
+      sessions: number;
+    };
+
+    const buckets = new Map<string, Bucket>();
+
+    if (chartPeriod === 'daily') {
+      const start = subDays(now, 13);
+      const days = eachDayOfInterval({ start, end: now });
+      days.forEach(d => {
+        const key = getLocalDateString(d);
+        buckets.set(key, { label: format(d, 'MMM d'), questionsAsked: 0, questionsCorrect: 0, sessions: 0 });
+      });
+      sessions.forEach(s => {
+        try {
+          const d = new Date(s.date);
+          const key = getLocalDateString(d);
+          const b = buckets.get(key);
+          if (b) {
+            b.questionsAsked += s.questionsAsked;
+            b.questionsCorrect += s.questionsCorrect;
+            b.sessions += 1;
+          }
+        } catch { /* skip */ }
+      });
+    } else if (chartPeriod === 'weekly') {
+      const start = startOfWeek(subWeeks(now, 11), { weekStartsOn: 1 });
+      const weeks = eachWeekOfInterval({ start, end: now }, { weekStartsOn: 1 });
+      weeks.forEach(w => {
+        const key = getLocalDateString(w);
+        const weekEnd = endOfWeek(w, { weekStartsOn: 1 });
+        const label = isSameMonth(w, weekEnd)
+          ? `${format(w, 'MMM d')}–${format(weekEnd, 'd')}`
+          : `${format(w, 'MMM d')}–${format(weekEnd, 'MMM d')}`;
+        buckets.set(key, { label, questionsAsked: 0, questionsCorrect: 0, sessions: 0 });
+      });
+      sessions.forEach(s => {
+        try {
+          const d = new Date(s.date);
+          const weekStart = startOfWeek(d, { weekStartsOn: 1 });
+          const key = getLocalDateString(weekStart);
+          const b = buckets.get(key);
+          if (b) {
+            b.questionsAsked += s.questionsAsked;
+            b.questionsCorrect += s.questionsCorrect;
+            b.sessions += 1;
+          }
+        } catch { /* skip */ }
+      });
+    } else {
+      const start = startOfMonth(subMonths(now, 11));
+      const months = eachMonthOfInterval({ start, end: now });
+      months.forEach(m => {
+        const key = format(m, 'yyyy-MM');
+        buckets.set(key, { label: format(m, "MMM ''yy"), questionsAsked: 0, questionsCorrect: 0, sessions: 0 });
+      });
+      sessions.forEach(s => {
+        try {
+          const d = new Date(s.date);
+          const key = format(d, 'yyyy-MM');
+          const b = buckets.get(key);
+          if (b) {
+            b.questionsAsked += s.questionsAsked;
+            b.questionsCorrect += s.questionsCorrect;
+            b.sessions += 1;
+          }
+        } catch { /* skip */ }
+      });
+    }
+
+    return Array.from(buckets.values()).map(b => ({
+      ...b,
+      questionsIncorrect: Math.max(0, b.questionsAsked - b.questionsCorrect),
+      accuracy: b.questionsAsked > 0 ? Math.round((b.questionsCorrect / b.questionsAsked) * 100) : 0,
+    }));
+  }, [userProgress.sessions, chartPeriod]);
+
+  const chartTotals = useMemo(() => {
+    const totalQuestions = chartData.reduce((sum, d) => sum + d.questionsAsked, 0);
+    const totalCorrect = chartData.reduce((sum, d) => sum + d.questionsCorrect, 0);
+    const totalSessions = chartData.reduce((sum, d) => sum + d.sessions, 0);
+    const avgAccuracy = totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0;
+    return { totalQuestions, totalCorrect, totalSessions, avgAccuracy };
+  }, [chartData]);
 
   return (
     <div className="pb-20 min-h-screen">
@@ -181,67 +256,97 @@ export function Progress({ userProgress, setUserProgress }: ProgressProps) {
 
         <Card className="mb-6 bg-card border-border">
           <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Calendar size={20} className="text-primary" />
-              Today's Progress
-            </CardTitle>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <ChartBar size={20} className="text-primary" />
+                  Progress Overview
+                </CardTitle>
+                <CardDescription className="mt-1">
+                  Review your accuracy and activity over time
+                </CardDescription>
+              </div>
+              <Tabs value={chartPeriod} onValueChange={(v) => setChartPeriod(v as 'daily' | 'weekly' | 'monthly')}>
+                <TabsList>
+                  <TabsTrigger value="daily">Daily</TabsTrigger>
+                  <TabsTrigger value="weekly">Weekly</TabsTrigger>
+                  <TabsTrigger value="monthly">Monthly</TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-center gap-3 p-4 rounded-lg bg-background">
-              {hasCompletedToday ? (
-                <>
-                  <CheckCircle size={32} weight="fill" className="text-success flex-shrink-0" />
-                  <div>
-                    <p className="font-semibold text-success">Session Complete!</p>
-                    <p className="text-sm text-muted-foreground">Great work today! Keep up your streak.</p>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <XCircle size={32} weight="fill" className="text-muted-foreground flex-shrink-0" />
-                  <div>
-                    <p className="font-semibold text-foreground">No Session Yet</p>
-                    <p className="text-sm text-muted-foreground">Start your practice session today!</p>
-                  </div>
-                </>
-              )}
+            <div className="grid grid-cols-3 gap-3">
+              <div className="rounded-lg bg-background border border-border p-3">
+                <p className="text-xs text-muted-foreground uppercase tracking-wide">Sessions</p>
+                <p className="text-2xl font-bold">{chartTotals.totalSessions}</p>
+              </div>
+              <div className="rounded-lg bg-background border border-border p-3">
+                <p className="text-xs text-muted-foreground uppercase tracking-wide">Questions</p>
+                <p className="text-2xl font-bold">{chartTotals.totalQuestions}</p>
+              </div>
+              <div className="rounded-lg bg-background border border-border p-3">
+                <p className="text-xs text-muted-foreground uppercase tracking-wide">Accuracy</p>
+                <p className="text-2xl font-bold">{chartTotals.avgAccuracy}%</p>
+              </div>
             </div>
 
-            {recentSessions.length > 0 && (
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 mb-3">
-                  <Target size={16} className="text-muted-foreground" />
-                  <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                    Recent Sessions
-                  </h3>
-                </div>
-                {recentSessions.map((session) => (
-                  <div
-                    key={session.id}
-                    className="flex items-center justify-between p-3 rounded-lg bg-background border border-border hover:border-primary/50 transition-colors"
-                  >
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">
-                        {format(parseISO(session.date), 'MMM d, yyyy')}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {session.questionsCorrect}/{session.questionsAsked} correct
-                      </p>
-                    </div>
-                    <Badge 
-                      variant={session.accuracy >= 80 ? 'default' : session.accuracy >= 60 ? 'secondary' : 'outline'}
-                      className="font-semibold"
-                    >
-                      {session.accuracy}%
-                    </Badge>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {recentSessions.length === 0 && (
-              <div className="text-center py-8">
-                <p className="text-sm text-muted-foreground">No sessions yet. Start your first one!</p>
+            {chartTotals.totalSessions > 0 ? (
+              <ChartContainer
+                config={{
+                  questionsCorrect: { label: 'Correct', color: 'hsl(var(--primary))' },
+                  questionsIncorrect: { label: 'Incorrect', color: 'hsl(var(--muted))' },
+                  accuracy: { label: 'Accuracy', color: 'hsl(var(--accent))' },
+                }}
+                className="h-72 w-full"
+              >
+                <ComposedChart data={chartData} margin={{ top: 12, right: 12, left: 0, bottom: chartPeriod === 'weekly' ? 24 : 8 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} className="stroke-border" />
+                  <XAxis
+                    dataKey="label"
+                    tickLine={false}
+                    axisLine={false}
+                    tick={{ fontSize: 11 }}
+                    interval={0}
+                    angle={chartPeriod === 'weekly' ? -25 : 0}
+                    textAnchor={chartPeriod === 'weekly' ? 'end' : 'middle'}
+                    height={chartPeriod === 'weekly' ? 50 : 30}
+                  />
+                  <YAxis
+                    yAxisId="left"
+                    tickLine={false}
+                    axisLine={false}
+                    tick={{ fontSize: 11 }}
+                    allowDecimals={false}
+                    label={{ value: 'Questions', angle: -90, position: 'insideLeft', style: { fontSize: 11, fill: 'hsl(var(--muted-foreground))' } }}
+                  />
+                  <YAxis
+                    yAxisId="right"
+                    orientation="right"
+                    domain={[0, 100]}
+                    tickLine={false}
+                    axisLine={false}
+                    tick={{ fontSize: 11 }}
+                    tickFormatter={(v) => `${v}%`}
+                  />
+                  <ChartTooltip content={<ChartTooltipContent indicator="dot" />} />
+                  <Bar yAxisId="left" stackId="q" dataKey="questionsCorrect" fill="var(--color-questionsCorrect)" radius={[0, 0, 0, 0]} />
+                  <Bar yAxisId="left" stackId="q" dataKey="questionsIncorrect" fill="var(--color-questionsIncorrect)" radius={[4, 4, 0, 0]} />
+                  <Line
+                    yAxisId="right"
+                    type="monotone"
+                    dataKey="accuracy"
+                    stroke="var(--color-accuracy)"
+                    strokeWidth={2.5}
+                    dot={{ r: 4, fill: '#ffffff', stroke: 'var(--color-accuracy)', strokeWidth: 2 }}
+                    activeDot={{ r: 6, fill: '#ffffff', stroke: 'var(--color-accuracy)', strokeWidth: 2 }}
+                    connectNulls
+                  />
+                </ComposedChart>
+              </ChartContainer>
+            ) : (
+              <div className="text-center py-12">
+                <p className="text-sm text-muted-foreground">No sessions in this period yet. Start practicing!</p>
               </div>
             )}
           </CardContent>
