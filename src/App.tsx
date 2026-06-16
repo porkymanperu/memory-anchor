@@ -5,7 +5,7 @@ import { Practice } from './components/Practice';
 import { Library } from './components/Library';
 import { Progress } from './components/Progress';
 import { Goals } from './components/Goals';
-import { CategoryId, MemoryItem, UserProgress } from './lib/types';
+import { CategoryId, DeletedMemoryItem, MemoryItem, UserProgress } from './lib/types';
 import { sampleMemoryItems, DATA_VERSION } from './lib/data';
 import { Toaster } from './components/ui/sonner';
 
@@ -19,6 +19,7 @@ function App() {
   
   const [dataVersion, setDataVersion] = useKV<string>('data-version', '1.0');
   const [allItems, setAllItems] = useKV<MemoryItem[]>('memory-items', sampleMemoryItems);
+  const [recycleBinItems, setRecycleBinItems] = useKV<DeletedMemoryItem[]>('recycle-bin-items', []);
   const [userProgress, setUserProgress] = useKV<UserProgress>('user-progress', {
     currentStreak: 0,
     longestStreak: 0,
@@ -89,9 +90,11 @@ function App() {
         {currentView === 'library' && allItems && userProgress && (
           <Library 
             allItems={allItems}
+            recycleBinItems={recycleBinItems || []}
             userProgress={userProgress}
             setUserProgress={setUserProgress as any}
             setAllItems={setAllItems as any}
+            setRecycleBinItems={setRecycleBinItems as any}
           />
         )}
         

@@ -41,6 +41,11 @@ export interface MemoryItem {
   tags?: string[];
 }
 
+export interface DeletedMemoryItem {
+  item: MemoryItem;
+  deletedAt: string;
+}
+
 export interface MemoryAssociation {
   technique: string;
   explanation: string;

@@ -5,7 +5,7 @@ import { selectQuestionsWithSpacedRepetition } from '@/lib/spaced-repetition';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Lightbulb, X, CheckCircle, ArrowRight, Sparkle, Trophy, Target, Clock } from '@phosphor-icons/react';
+import { Lightbulb, X, CheckCircle, ArrowRight, Trophy, Target, Clock } from '@phosphor-icons/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 
@@ -37,13 +37,6 @@ export function Practice({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [hintsRevealed, setHintsRevealed] = useState(0);
   const [answerRevealed, setAnswerRevealed] = useState(false);
-  const [aiAssociation, setAiAssociation] = useState<{
-    technique: string;
-    explanation: string;
-    imagery: string;
-    mnemonic?: string;
-  } | null>(null);
-  const [isGeneratingAssociation, setIsGeneratingAssociation] = useState(false);
   const [sessionStats, setSessionStats] = useState({
     correct: 0,
     hintsUsed: 0,
@@ -59,6 +52,8 @@ export function Practice({
   } | null>(null);
 
   useEffect(() => {
+    if (viewMode !== 'practice') return;
+    if (sessionItems.length > 0) return;
     let items = getItemsByCategories(allItems, selectedCategories);
     
     items = items.filter(item => item.difficulty === selectedDifficulty);
@@ -74,7 +69,7 @@ export function Practice({
       displayQuestion: getRandomQuestion(item)
     }));
     setSessionItems(withDisplayQuestions);
-  }, [allItems, selectedCategories, selectedDifficulty, questionCount, userProgress]);
+  }, [allItems, selectedCategories, selectedDifficulty, questionCount, userProgress, viewMode, sessionItems.length]);
 
   const currentItem = sessionItems[currentIndex];
   const progressPercent = sessionItems.length > 0 ? ((currentIndex + 1) / sessionItems.length) * 100 : 0;
@@ -88,50 +83,6 @@ export function Practice({
 
   const handleShowAnswer = () => {
     setAnswerRevealed(true);
-  };
-
-  const generateMemoryAssociation = async () => {
-    if (isGeneratingAssociation || !currentItem) return;
-    
-    setIsGeneratingAssociation(true);
-    
-    try {
-      const answerText = currentItem.answerType === 'multiple' && currentItem.validAnswers
-        ? `Multiple answers: ${currentItem.validAnswers.join(', ')}`
-        : currentItem.answer;
-      
-      const promptText = `Eres un experto en memoria ayudando a los usuarios a crear asociaciones memorables.
-
-Genera una asociación de memoria personalizada para lo siguiente:
-- Pregunta: ${currentItem.displayQuestion}
-- Respuesta: ${answerText}
-- Categoría: ${currentItem.categoryId}
-
-Crea una asociación de memoria que:
-1. Use técnicas creativas como fonética, similitud visual, emociones o narrativa
-2. Proporcione una breve explicación de por qué funciona la asociación
-3. Incluya imágenes mentales vívidas o un escenario memorable
-4. Sea conversacional, atractiva y ayude a fortalecer el recuerdo a largo plazo
-
-Devuelve el resultado como JSON con esta estructura:
-{
-  "technique": "Nombre de la técnica de memoria (ej., 'Asociación Visual', 'Enlace Fonético', 'Historia Emocional')",
-  "explanation": "Una breve explicación de 1-2 oraciones de por qué funciona esta asociación",
-  "imagery": "Una imagen mental vívida y detallada o escenario (2-3 oraciones)",
-  "mnemonic": "Opcional: Una frase corta memorable o acrónimo si aplica"
-}`;
-
-      const response = await window.spark.llm(promptText, 'gpt-4o', true);
-      const association = JSON.parse(response);
-      
-      setAiAssociation(association);
-      toast.success('Memory association generated!');
-    } catch (error) {
-      console.error('Error generating association:', error);
-      toast.error('Failed to generate memory association. Please try again.');
-    } finally {
-      setIsGeneratingAssociation(false);
-    }
   };
 
   const recordQuestionResult = (wasCorrect: boolean) => {
@@ -181,7 +132,6 @@ Devuelve el resultado como JSON con esta estructura:
       setCurrentIndex(currentIndex + 1);
       setHintsRevealed(0);
       setAnswerRevealed(false);
-      setAiAssociation(null);
       setRememberedCount(null);
     } else {
       finishSession();
@@ -271,17 +221,6 @@ Devuelve el resultado como JSON con esta estructura:
     
     setViewMode('completed');
   };
-
-  if (!currentItem) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin w-12 h-12 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading questions...</p>
-        </div>
-      </div>
-    );
-  }
 
   if (viewMode === 'completed' && completedSessionData) {
     const minutes = Math.floor(completedSessionData.timeSpent / 60);
@@ -385,6 +324,17 @@ Devuelve el resultado como JSON con esta estructura:
             </CardContent>
           </Card>
         </motion.div>
+      </div>
+    );
+  }
+
+  if (!currentItem) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin w-12 h-12 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading questions...</p>
+        </div>
       </div>
     );
   }
@@ -584,61 +534,6 @@ Devuelve el resultado como JSON con esta estructura:
                           alt={`Visual aid for ${currentItem.answer || 'answers'}`}
                           className="w-full h-auto max-h-80 object-contain"
                         />
-                      </motion.div>
-                    )}
-
-                    {!aiAssociation && (
-                      <div className="flex justify-center">
-                        <Button
-                          onClick={generateMemoryAssociation}
-                          disabled={isGeneratingAssociation}
-                          variant="outline"
-                          className="gap-2 border-2 border-dashed border-accent/40 hover:border-accent hover:bg-accent/10"
-                        >
-                          {isGeneratingAssociation ? (
-                            <>
-                              <div className="w-4 h-4 border-2 border-accent border-t-transparent rounded-full animate-spin" />
-                              Generating...
-                            </>
-                          ) : (
-                            <>
-                              <Sparkle size={20} weight="duotone" className="text-accent" />
-                              Generate AI Memory Tip
-                            </>
-                          )}
-                        </Button>
-                      </div>
-                    )}
-
-                    {aiAssociation && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="bg-gradient-to-br from-accent/20 via-accent/10 to-accent/5 rounded-xl p-6 space-y-4 border-2 border-accent/30 shadow-lg"
-                      >
-                        <div className="flex items-center gap-2 mb-2">
-                          <Sparkle size={24} weight="duotone" className="text-accent" />
-                          <p className="font-bold text-lg text-accent">AI-Generated Memory Tip</p>
-                        </div>
-                        
-                        <div>
-                          <p className="font-semibold text-sm text-accent-foreground uppercase tracking-wide mb-3">
-                            {aiAssociation.technique}
-                          </p>
-                        </div>
-
-                        <div className="bg-card/80 backdrop-blur-sm rounded-lg p-4 border-l-4 border-accent">
-                          <p className="text-lg leading-relaxed text-foreground">
-                            {aiAssociation.imagery}
-                          </p>
-                        </div>
-
-                        {aiAssociation.mnemonic && (
-                          <div className="bg-accent/10 rounded-lg p-4 border border-accent/30">
-                            <p className="text-sm font-medium text-accent mb-1">Memory Trick</p>
-                            <p className="text-foreground italic">"{aiAssociation.mnemonic}"</p>
-                          </div>
-                        )}
                       </motion.div>
                     )}
 
