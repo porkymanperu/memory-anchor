@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { CategoryId, MemoryItem, UserProgress, SessionQuestion } from '@/lib/types';
 import { shuffleArray, getItemsByCategories, updateStreak, getRandomQuestion } from '@/lib/helpers';
 import { selectQuestionsWithSpacedRepetition } from '@/lib/spaced-repetition';
+import { insertSession } from '@/lib/repository';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -200,7 +201,19 @@ export function Practice({
         };
       }
     }
-    
+
+    // Persist the session row separately. `setUserProgress` writes only the
+    // scalar `user_progress` columns — the `sessions` array is derived at read
+    // time by joining `practice_sessions`, so a session won't appear after
+    // refresh unless we insert it here.
+    insertSession(newSession).catch((err) => {
+      // eslint-disable-next-line no-console
+      console.error('[Practice] insertSession failed', err);
+      const message =
+        err instanceof Error ? err.message : 'Could not save practice session.';
+      toast.error(message);
+    });
+
     setUserProgress(prev => ({
       ...newProgress,
       totalSessions: prev.totalSessions + 1,

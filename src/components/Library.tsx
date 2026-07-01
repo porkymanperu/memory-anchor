@@ -1,6 +1,6 @@
 import { useState, useRef, useMemo, useEffect } from 'react';
 import { CategoryId, DeletedMemoryItem, MemoryItem, UserProgress, CategoryGroup } from '@/lib/types';
-import { useKV } from '@github/spark/hooks';
+import { useCustomCategoriesKV } from '@/hooks/queries';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -52,7 +52,7 @@ interface LibraryProps {
 export function Library({ allItems, recycleBinItems, userProgress, setUserProgress, setAllItems, setRecycleBinItems }: LibraryProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<CategoryId | 'all'>('all');
-  const [customCategories, setCustomCategories] = useKV<StoredCategory[]>('custom-categories', []);
+  const [customCategories, setCustomCategories] = useCustomCategoriesKV();
   const [selectedItem, setSelectedItem] = useState<MemoryItem | null>(null);
   const [selectedGroup, setSelectedGroup] = useState<CategoryGroup | 'all'>('all');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -542,9 +542,15 @@ Solo responde con el JSON, sin texto adicional.`;
       const matchesGroup = selectedGroup === 'all' || itemCategory?.group === selectedGroup;
       return matchesSearch && matchesCategory && matchesGroup;
     });
-    setCurrentPage(1);
     return items;
   }, [allItems, searchQuery, selectedCategory, selectedGroup, allCategories]);
+
+  // Reset pagination when the active filter set changes. Doing this in an
+  // effect (rather than inside the useMemo above) avoids "Too many re-renders"
+  // by ensuring setState never runs during render.
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedCategory, selectedGroup]);
 
   const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
   const selectedCount = selectedItemIds.size;

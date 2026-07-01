@@ -1,26 +1,80 @@
-import { useState, useEffect } from 'react';
-import { useKV } from '@github/spark/hooks';
+import { useState, useEffect, useRef } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { Home } from './components/Home';
 import { Practice } from './components/Practice';
 import { Library } from './components/Library';
 import { Progress } from './components/Progress';
 import { Goals } from './components/Goals';
+import { SignIn } from './components/SignIn';
 import { CategoryId, DeletedMemoryItem, MemoryItem, UserProgress } from './lib/types';
 import { sampleMemoryItems, DATA_VERSION } from './lib/data';
+import { getCurrentUser, onAuthChange, signOut } from './lib/auth';
+import {
+  bulkUpsertMemoryItems,
+  getDataVersion,
+  listMemoryItems,
+  setDataVersion as writeDataVersion,
+} from './lib/repository';
+import {
+  useDataVersionKV,
+  useMemoryItemsKV,
+  useRecycleBinKV,
+  useUserProgressKV,
+} from './hooks/queries';
 import { Toaster } from './components/ui/sonner';
 
 type View = 'home' | 'practice' | 'library' | 'progress' | 'goals';
+type AuthStatus = 'loading' | 'signed-in' | 'signed-out';
 
 function App() {
+  const [authStatus, setAuthStatus] = useState<AuthStatus>('loading');
   const [currentView, setCurrentView] = useState<View>('home');
+  const queryClient = useQueryClient();
+  const seedAttemptedRef = useRef(false);
   const [selectedCategories, setSelectedCategories] = useState<CategoryId[]>([]);
   const [selectedDifficulty, setSelectedDifficulty] = useState<'easy' | 'medium' | 'hard'>('easy');
   const [questionCount, setQuestionCount] = useState<number>(10);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    getCurrentUser()
+      .then((user) => {
+        if (cancelled) return;
+        setAuthStatus(user ? 'signed-in' : 'signed-out');
+      })
+      .catch(() => {
+        if (!cancelled) setAuthStatus('signed-out');
+      });
+
+    const unsubscribe = onAuthChange((_event, session) => {
+      setAuthStatus(session?.user ? 'signed-in' : 'signed-out');
+    });
+
+    return () => {
+      cancelled = true;
+      unsubscribe();
+    };
+  }, []);
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      seedAttemptedRef.current = false;
+      setCurrentView('home');
+      toast.success('Signed out.');
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : 'Could not sign out.';
+      toast.error(message);
+    }
+  };
   
-  const [dataVersion, setDataVersion] = useKV<string>('data-version', '1.0');
-  const [allItems, setAllItems] = useKV<MemoryItem[]>('memory-items', sampleMemoryItems);
-  const [recycleBinItems, setRecycleBinItems] = useKV<DeletedMemoryItem[]>('recycle-bin-items', []);
-  const [userProgress, setUserProgress] = useKV<UserProgress>('user-progress', {
+  const [dataVersion, setDataVersion] = useDataVersionKV('1.0');
+  const [allItems, setAllItems] = useMemoryItemsKV(sampleMemoryItems);
+  const [recycleBinItems, setRecycleBinItems] = useRecycleBinKV();
+  const [userProgress, setUserProgress] = useUserProgressKV({
     currentStreak: 0,
     longestStreak: 0,
     lastPracticeDate: '',
@@ -33,14 +87,51 @@ function App() {
     sessions: []
   });
 
+  // Seed sample data on first sign-in (or after a DATA_VERSION bump).
+  // Reads `getDataVersion()` directly from Supabase so the decision is based
+  // on the authoritative server value rather than the hook's loading default.
+  // Custom items (isCustom = true) are preserved across reseeds.
   useEffect(() => {
-    if (dataVersion !== DATA_VERSION) {
-      const customItems = allItems?.filter(item => item.isCustom) || [];
-      const newItems = [...sampleMemoryItems, ...customItems];
-      setAllItems(newItems);
-      setDataVersion(DATA_VERSION);
-    }
-  }, [dataVersion, allItems, setAllItems, setDataVersion]);
+    if (authStatus !== 'signed-in') return;
+    if (seedAttemptedRef.current) return;
+    seedAttemptedRef.current = true;
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const currentVersion = await getDataVersion();
+        if (cancelled) return;
+        if (currentVersion === DATA_VERSION) return;
+
+        const existing = await listMemoryItems();
+        if (cancelled) return;
+
+        const customItems = existing.filter((item) => item.isCustom);
+        const merged = [...sampleMemoryItems, ...customItems];
+
+        await bulkUpsertMemoryItems(merged);
+        if (cancelled) return;
+
+        await writeDataVersion(DATA_VERSION);
+        if (cancelled) return;
+
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ['memory-items'] }),
+          queryClient.invalidateQueries({ queryKey: ['data-version'] }),
+        ]);
+      } catch (err) {
+        // Allow a retry on next mount / next auth change.
+        seedAttemptedRef.current = false;
+        const message =
+          err instanceof Error ? err.message : 'Could not load sample data.';
+        toast.error(message);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [authStatus, queryClient]);
 
   const startPractice = (categories: CategoryId[], difficulty: 'easy' | 'medium' | 'hard' = 'easy', count?: number) => {
     setSelectedCategories(categories);
@@ -54,12 +145,31 @@ function App() {
     setSelectedCategories([]);
   };
 
+  if (authStatus === 'loading') {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-sm text-muted-foreground">Loading…</p>
+        <Toaster />
+      </div>
+    );
+  }
+
+  if (authStatus === 'signed-out') {
+    return (
+      <>
+        <SignIn />
+        <Toaster />
+      </>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <div className="pb-20">
         {currentView === 'home' && (
           <Home 
             onStartPractice={startPractice}
+            onSignOut={handleSignOut}
             userProgress={userProgress || {
               currentStreak: 0,
               longestStreak: 0,

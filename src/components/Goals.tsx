@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useKV } from '@github/spark/hooks';
 import { UserGoal, UserProgress, GoalCategory } from '@/lib/types';
 import { goalTemplates, goalCategoryNames, goalCategoryDescriptions } from '@/lib/goal-templates';
 import { updateGoalStatuses } from '@/lib/goal-validation';
+import { useUserGoalsKV } from '@/hooks/queries';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -29,7 +29,7 @@ interface GoalsProps {
 }
 
 export function Goals({ userProgress }: GoalsProps) {
-  const [userGoals, setUserGoals] = useKV<UserGoal[]>('user-goals', []);
+  const [userGoals, setUserGoals] = useUserGoalsKV();
   const [showTemplateSelector, setShowTemplateSelector] = useState(false);
   const [showConfiguration, setShowConfiguration] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);

@@ -23,6 +23,14 @@ export interface Category {
   color: string;
 }
 
+export interface StoredCategory {
+  id: string;
+  name: string;
+  group: CategoryGroup;
+  icon: string;
+  color: string;
+}
+
 export interface MemoryItem {
   id: string;
   categoryId: CategoryId;

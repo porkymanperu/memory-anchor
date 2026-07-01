@@ -4,15 +4,16 @@ import { categories } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Brain, Play } from '@phosphor-icons/react';
+import { Brain, Play, SignOut } from '@phosphor-icons/react';
 import { motion } from 'framer-motion';
 
 interface HomeProps {
   onStartPractice: (categories: CategoryId[], difficulty?: 'easy' | 'medium' | 'hard', questionCount?: number) => void;
   userProgress: UserProgress;
+  onSignOut?: () => void;
 }
 
-export function Home({ onStartPractice, userProgress }: HomeProps) {
+export function Home({ onStartPractice, userProgress, onSignOut }: HomeProps) {
   const [showCategoryDialog, setShowCategoryDialog] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<CategoryId[]>([]);
   const [selectedDifficulty, setSelectedDifficulty] = useState<'easy' | 'medium' | 'hard'>('easy');
@@ -65,6 +66,20 @@ export function Home({ onStartPractice, userProgress }: HomeProps) {
   return (
     <div className="min-h-screen">
       <div className="max-w-2xl mx-auto px-5 pt-8 pb-6 space-y-6">
+        {onSignOut && (
+          <div className="flex justify-end -mb-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onSignOut}
+              className="text-muted-foreground hover:text-foreground gap-1.5 h-8 px-2"
+              aria-label="Sign out"
+            >
+              <SignOut size={16} weight="regular" />
+              <span className="text-xs font-medium">Sign out</span>
+            </Button>
+          </div>
+        )}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
